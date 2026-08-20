@@ -36,35 +36,52 @@ export default function Login() {
     }
   }
 
+  const isLogin = mode === 'login'
+
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1>DAI CRM</h1>
-        <p>Lead → Follow up → Convert → Pipeline → Won / Lost</p>
-        <form onSubmit={handleSubmit}>
-          {mode === 'register' && (
-            <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
-          )}
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input
-            type="password"
-            placeholder="Password (min. 6 characters)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error && <div className="error">{error}</div>}
-          <button className="btn" disabled={busy}>
-            {busy ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
-        <p>
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-          <button className="linkish" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-            {mode === 'login' ? 'Register' : 'Sign in'}
-          </button>
-        </p>
-        <p className="muted">The first user to register becomes Admin. Later users are Sales.</p>
+      <div className="auth-shell">
+        <aside className="auth-brand">
+          <div className="auth-mark">D</div>
+          <strong>DAI CRM</strong>
+          <p>A simple workspace for your sales team.</p>
+        </aside>
+        <div className="auth-card">
+          <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>
+          <p>{isLogin ? 'Sign in to continue' : 'Set up your DAI CRM account'}</p>
+          <form onSubmit={handleSubmit}>
+            {mode === 'register' && (
+              <label className="field">
+                <span>Full name</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
+              </label>
+            )}
+            <label className="field">
+              <span>Email</span>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
+              />
+            </label>
+            {error && <div className="error">{error}</div>}
+            <button className="btn auth-submit" disabled={busy}>
+              {busy ? 'Please wait...' : isLogin ? 'Sign in' : 'Create account'}
+            </button>
+          </form>
+          <p className="auth-switch">
+            {isLogin ? "Don't have an account?" : 'Already have an account?'}
+            <button className="linkish" onClick={() => setMode(isLogin ? 'register' : 'login')}>
+              {isLogin ? 'Register' : 'Sign in'}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )
