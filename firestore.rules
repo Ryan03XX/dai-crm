@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function owned(data) {
+      return signedIn() && data.ownerId == request.auth.uid;
+    }
+
+    function crmAccess() {
+      return request.method == 'create'
+        ? owned(request.resource.data)
+        : (isAdmin() || owned(resource.data));
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /leads/{id} { allow read, write: if crmAccess(); }
+    match /companies/{id} { allow read, write: if crmAccess(); }
+    match /contacts/{id} { allow read, write: if crmAccess(); }
+    match /deals/{id} { allow read, write: if crmAccess(); }
+    match /activities/{id} { allow read, write: if crmAccess(); }
+    match /tasks/{id} { allow read, write: if crmAccess(); }
+  }
+}
