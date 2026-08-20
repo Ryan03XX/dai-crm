@@ -1,10 +1,36 @@
-export function money(value) {
+import { COUNTRY_CODES, DEFAULT_PHONE_COUNTRY } from './constants'
+
+const LOCALES = {
+  SGD: 'en-SG',
+  MYR: 'en-MY',
+  USD: 'en-US',
+}
+
+export function money(value, currency = 'SGD') {
   const amount = Number(value || 0)
-  return amount.toLocaleString('en-SG', {
+  const code = currency || 'SGD'
+  return amount.toLocaleString(LOCALES[code] || 'en-SG', {
     style: 'currency',
-    currency: 'SGD',
-    maximumFractionDigits: 0,
+    currency: code,
+    maximumFractionDigits: 2,
   })
+}
+
+export function moneyOf(deal) {
+  if (!deal) return '—'
+  return money(deal.value, deal.currency)
+}
+
+export function totalsByCurrency(deals) {
+  if (!deals?.length) return '—'
+  const map = {}
+  for (const deal of deals) {
+    const code = deal.currency || 'SGD'
+    map[code] = (map[code] || 0) + Number(deal.value || 0)
+  }
+  return Object.entries(map)
+    .map(([currency, total]) => money(total, currency))
+    .join(' · ')
 }
 
 export function formatDate(value) {
@@ -52,4 +78,14 @@ export function searchText(record, keyword) {
     .join(' ')
     .toLowerCase()
   return haystack.includes(keyword.toLowerCase())
+}
+
+export function countryOf(iso) {
+  return COUNTRY_CODES.find((item) => item.iso === (iso || DEFAULT_PHONE_COUNTRY)) || COUNTRY_CODES[0]
+}
+
+export function formatPhone(record) {
+  const number = String(record?.phone || '').trim()
+  if (!number) return '—'
+  return `${countryOf(record.phoneCountry).dial} ${number}`
 }

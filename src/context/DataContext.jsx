@@ -88,6 +88,7 @@ export function DataProvider({ children }) {
         batch.set(companyRef, {
           name: form.companyName,
           phone: lead.phone || '',
+          phoneCountry: lead.phoneCountry || 'SG',
           email: lead.email || '',
           website: '',
           address: '',
@@ -99,6 +100,7 @@ export function DataProvider({ children }) {
           name: form.contactName,
           position: form.position || '',
           phone: lead.phone || '',
+          phoneCountry: lead.phoneCountry || 'SG',
           email: lead.email || '',
           companyId: companyRef.id,
           companyName: form.companyName,
@@ -108,6 +110,7 @@ export function DataProvider({ children }) {
         batch.set(dealRef, {
           name: form.dealName,
           value: Number(form.value || 0),
+          currency: form.currency,
           companyId: companyRef.id,
           companyName: form.companyName,
           contactId: contactRef.id,

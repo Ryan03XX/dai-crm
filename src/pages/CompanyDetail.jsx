@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, labelOf } from '../constants'
-import { Field, Pill } from '../components/ui'
-import { money } from '../utils'
+import { Field, PhoneField, PhoneText, Pill } from '../components/ui'
+import { moneyOf } from '../utils'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 
 export default function CompanyDetail() {
@@ -14,6 +14,7 @@ export default function CompanyDetail() {
     name: '',
     industry: '',
     phone: '',
+    phoneCountry: 'SG',
     email: '',
     website: '',
     address: '',
@@ -27,6 +28,7 @@ export default function CompanyDetail() {
       name: company.name || '',
       industry: company.industry || '',
       phone: company.phone || '',
+      phoneCountry: company.phoneCountry || 'SG',
       email: company.email || '',
       website: company.website || '',
       address: company.address || '',
@@ -63,9 +65,12 @@ export default function CompanyDetail() {
             <Field label="Industry">
               <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
             </Field>
-            <Field label="Phone">
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </Field>
+            <PhoneField
+              country={form.phoneCountry}
+              number={form.phone}
+              onCountryChange={(phoneCountry) => setForm({ ...form, phoneCountry })}
+              onNumberChange={(phone) => setForm({ ...form, phone })}
+            />
             <Field label="Email">
               <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </Field>
@@ -111,7 +116,7 @@ export default function CompanyDetail() {
             <div key={person.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
               <b>{person.name}</b>
               <div className="muted">
-                {person.position || 'No position'} · {person.phone || person.email}
+                {person.position || 'No position'} · {person.phone ? <PhoneText record={person} /> : person.email}
               </div>
             </div>
           ))}
@@ -124,7 +129,7 @@ export default function CompanyDetail() {
                 <b>{deal.name}</b>
               </Link>
               <div className="muted">
-                {money(deal.value)} · <Pill value={deal.stage} label={labelOf(DEAL_STAGES, deal.stage)} />
+                {moneyOf(deal)} · <Pill value={deal.stage} label={labelOf(DEAL_STAGES, deal.stage)} />
               </div>
             </div>
           ))}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { ACTIVITY_TYPES, LEAD_SOURCES, LEAD_STATUSES, labelOf } from '../constants'
-import { Field, Modal, Pill } from '../components/ui'
+import { Field, Modal, MoneyField, PhoneField, Pill } from '../components/ui'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 import { formatDateTime } from '../utils'
 
@@ -13,10 +13,13 @@ export default function LeadDetail() {
   const lead = leads.find((item) => item.id === id)
   const [convertOpen, setConvertOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [dealCurrency, setDealCurrency] = useState('')
+  const [dealAmount, setDealAmount] = useState('')
   const [form, setForm] = useState({
     name: '',
     company: '',
     phone: '',
+    phoneCountry: 'SG',
     email: '',
     source: 'Website',
     status: 'new',
@@ -28,6 +31,7 @@ export default function LeadDetail() {
       name: lead.name || '',
       company: lead.company || '',
       phone: lead.phone || '',
+      phoneCountry: lead.phoneCountry || 'SG',
       email: lead.email || '',
       source: lead.source || 'Website',
       status: lead.status || 'new',
@@ -79,7 +83,11 @@ export default function LeadDetail() {
     setBusy(true)
     try {
       const data = Object.fromEntries(new FormData(e.target))
+      data.currency = dealCurrency
+      data.value = dealAmount
       await convertLead(lead, data)
+      setDealCurrency('')
+      setDealAmount('')
       navigate('/pipeline')
     } catch (err) {
       alert(err.message || 'Unable to convert this lead')
@@ -106,7 +114,11 @@ export default function LeadDetail() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {lead.status !== 'converted' && (
-            <button className="btn gold" onClick={() => setConvertOpen(true)}>
+            <button className="btn gold" onClick={() => {
+              setDealCurrency('')
+              setDealAmount('')
+              setConvertOpen(true)
+            }}>
               Convert to Company + Contact + Deal
             </button>
           )}
@@ -135,9 +147,12 @@ export default function LeadDetail() {
             <Field label="Company">
               <input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
             </Field>
-            <Field label="Phone">
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </Field>
+            <PhoneField
+              country={form.phoneCountry}
+              number={form.phone}
+              onCountryChange={(phoneCountry) => setForm({ ...form, phoneCountry })}
+              onNumberChange={(phone) => setForm({ ...form, phone })}
+            />
             <Field label="Email">
               <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </Field>
@@ -208,9 +223,12 @@ export default function LeadDetail() {
               <Field label="Deal name">
                 <input name="dealName" defaultValue={`${lead.company || lead.name} deal`} required />
               </Field>
-              <Field label="Value (SGD)">
-                <input name="value" type="number" min="0" defaultValue="0" required />
-              </Field>
+              <MoneyField
+                currency={dealCurrency}
+                amount={dealAmount}
+                onCurrencyChange={setDealCurrency}
+                onAmountChange={setDealAmount}
+              />
               <Field label="Expected close date">
                 <input name="expectedCloseDate" type="date" />
               </Field>

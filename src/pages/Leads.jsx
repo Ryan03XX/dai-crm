@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { LEAD_SOURCES, LEAD_STATUSES, labelOf } from '../constants'
-import { Field, Modal, Pill } from '../components/ui'
+import { Field, Modal, NewButton, PhoneField, PhoneText, Pill } from '../components/ui'
 
 const emptyLead = {
   name: '',
   company: '',
   phone: '',
+  phoneCountry: 'SG',
   email: '',
   source: 'Website',
   status: 'new',
@@ -42,9 +43,7 @@ export default function Leads() {
           <h1>Leads</h1>
           <p>Add, edit and view leads. This is where the sales flow starts.</p>
         </div>
-        <button className="btn" onClick={() => setOpen(true)}>
-          New lead
-        </button>
+        <NewButton onClick={() => setOpen(true)}>New lead</NewButton>
       </div>
 
       <div className="toolbar">
@@ -77,7 +76,7 @@ export default function Leads() {
               <tr key={lead.id} className="clickable" onClick={() => navigate(`/leads/${lead.id}`)}>
                 <td>{lead.name}</td>
                 <td>{lead.company || '—'}</td>
-                <td>{lead.phone || '—'}</td>
+                <td><PhoneText record={lead} /></td>
                 <td>{lead.email || '—'}</td>
                 <td>{lead.source}</td>
                 <td>{lead.ownerName}</td>
@@ -100,9 +99,12 @@ export default function Leads() {
               <Field label="Company">
                 <input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
               </Field>
-              <Field label="Phone">
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </Field>
+              <PhoneField
+                country={form.phoneCountry}
+                number={form.phone}
+                onCountryChange={(phoneCountry) => setForm({ ...form, phoneCountry })}
+                onNumberChange={(phone) => setForm({ ...form, phone })}
+              />
               <Field label="Email">
                 <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>

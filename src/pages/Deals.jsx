@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, labelOf } from '../constants'
-import { Field, Modal, Pill } from '../components/ui'
-import { money, formatDate } from '../utils'
+import { Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
+import { moneyOf, formatDate } from '../utils'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 
 const emptyDeal = {
   name: '',
-  value: 0,
+  currency: '',
+  value: '',
   companyId: '',
   contactId: '',
   stage: 'qualification',
@@ -33,6 +34,7 @@ export default function Deals() {
     const contact = contacts.find((c) => c.id === form.contactId)
     await create('deals', {
       ...form,
+      currency: form.currency,
       value: Number(form.value || 0),
       companyName: company?.name || '',
       contactName: contact?.name || '',
@@ -48,9 +50,7 @@ export default function Deals() {
           <h1>Deals</h1>
           <p>Deal name, customer, value, owner and expected close date</p>
         </div>
-        <button className="btn" onClick={() => setOpen(true)}>
-          New deal
-        </button>
+        <NewButton onClick={() => setOpen(true)}>New deal</NewButton>
       </div>
 
       <div className="grid two">
@@ -71,7 +71,7 @@ export default function Deals() {
                 <tr key={deal.id} className="clickable" onClick={() => setParams({ id: deal.id })}>
                   <td>{deal.name}</td>
                   <td>{deal.companyName || '—'}</td>
-                  <td>{money(deal.value)}</td>
+                  <td>{moneyOf(deal)}</td>
                   <td>{deal.ownerName}</td>
                   <td>{formatDate(deal.expectedCloseDate)}</td>
                   <td>
@@ -88,7 +88,7 @@ export default function Deals() {
             <>
               <h3>{selected.name}</h3>
               <p className="muted">
-                {selected.companyName} · {selected.contactName} · {money(selected.value)}
+                {selected.companyName} · {selected.contactName} · {moneyOf(selected)}
               </p>
               <Field label="Stage">
                 <select value={selected.stage} onChange={(e) => update('deals', selected.id, { stage: e.target.value })}>
@@ -166,9 +166,12 @@ export default function Deals() {
                     ))}
                 </select>
               </Field>
-              <Field label="Value (SGD)">
-                <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
-              </Field>
+              <MoneyField
+                currency={form.currency}
+                amount={form.value}
+                onCurrencyChange={(currency) => setForm({ ...form, currency })}
+                onAmountChange={(value) => setForm({ ...form, value })}
+              />
               <Field label="Expected close date">
                 <input
                   type="date"

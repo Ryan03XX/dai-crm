@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { Field, Modal } from '../components/ui'
+import { Field, Modal, NewButton, PhoneField, PhoneText } from '../components/ui'
 
-const emptyContact = { name: '', position: '', phone: '', email: '', companyId: '' }
+const emptyContact = { name: '', position: '', phone: '', phoneCountry: 'SG', email: '', companyId: '' }
 
 export default function Contacts() {
   const { contacts, companies, create } = useData()
@@ -29,9 +29,7 @@ export default function Contacts() {
           <h1>Contacts</h1>
           <p>Contact name, position, phone, email and company</p>
         </div>
-        <button className="btn" onClick={() => setOpen(true)}>
-          New contact
-        </button>
+        <NewButton onClick={() => setOpen(true)}>New contact</NewButton>
       </div>
       <div className="toolbar">
         <input placeholder="Filter contacts" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 280 }} />
@@ -57,7 +55,7 @@ export default function Contacts() {
               >
                 <td>{contact.name}</td>
                 <td>{contact.position || '—'}</td>
-                <td>{contact.phone || '—'}</td>
+                <td><PhoneText record={contact} /></td>
                 <td>{contact.email || '—'}</td>
                 <td>{contact.companyName || '—'}</td>
                 <td>{contact.ownerName}</td>
@@ -76,9 +74,12 @@ export default function Contacts() {
               <Field label="Position">
                 <input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
               </Field>
-              <Field label="Phone">
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </Field>
+              <PhoneField
+                country={form.phoneCountry}
+                number={form.phone}
+                onCountryChange={(phoneCountry) => setForm({ ...form, phoneCountry })}
+                onNumberChange={(phone) => setForm({ ...form, phone })}
+              />
               <Field label="Email">
                 <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>

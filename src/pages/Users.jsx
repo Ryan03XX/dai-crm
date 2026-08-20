@@ -1,6 +1,11 @@
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
-import { Pill } from '../components/ui'
+
+const ROLES = [
+  { id: 'admin', label: 'Admin' },
+  { id: 'sales', label: 'Sales' },
+]
 
 export default function Users() {
   const { isAdmin } = useAuth()
@@ -16,7 +21,7 @@ export default function Users() {
           <p>Sales can manage their own customers. Admin can see everyone.</p>
         </div>
       </div>
-      <div className="card table-wrap">
+      <div className="card table-wrap users-table">
         <table>
           <thead>
             <tr>
@@ -31,19 +36,60 @@ export default function Users() {
                 <td>{person.name}</td>
                 <td>{person.email}</td>
                 <td>
-                  <select value={person.role} onChange={(e) => update('users', person.id, { role: e.target.value })}>
-                    <option value="sales">Sales</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <span style={{ marginLeft: 8 }}>
-                    <Pill value={person.role === 'admin' ? 'qualified' : 'new'} label={person.role} />
-                  </span>
+                  <RoleSelect value={person.role} onChange={(role) => update('users', person.id, { role })} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function RoleSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const current = ROLES.find((role) => role.id === value) || ROLES[1]
+
+  useEffect(() => {
+    function onDocClick(event) {
+      if (!ref.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
+  return (
+    <div className="role-menu" ref={ref}>
+      <button
+        type="button"
+        className={`pill role-trigger ${current.id}`}
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {current.label}
+        <span className="chevron" aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="role-dropdown" role="listbox">
+          {ROLES.map((role) => (
+            <button
+              key={role.id}
+              type="button"
+              className={role.id === value ? 'active' : ''}
+              onClick={() => {
+                onChange(role.id)
+                setOpen(false)
+              }}
+            >
+              <span className={`dot ${role.id}`} />
+              {role.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

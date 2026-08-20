@@ -1,19 +1,61 @@
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { formatDate, isOverdue, money } from '../utils'
-import { labelOf, DEAL_STAGES, TASK_STATUSES } from '../constants'
-import { Empty, Pill } from '../components/ui'
+import { CURRENCIES, labelOf, DEAL_STAGES, TASK_STATUSES } from '../constants'
+import { Empty, NewButton, Pill } from '../components/ui'
+
+function dealCurrency(deal) {
+  return deal.currency || 'SGD'
+}
 
 export default function Dashboard() {
   const { leads, deals, tasks, activities, loading } = useData()
-  const openDeals = deals.filter((d) => d.stage !== 'won' && d.stage !== 'lost')
-  const pipelineValue = openDeals.reduce((sum, d) => sum + Number(d.value || 0), 0)
-  const won = deals.filter((d) => d.stage === 'won')
-  const lost = deals.filter((d) => d.stage === 'lost')
-  const upcoming = tasks
-    .filter((t) => t.status !== 'done')
-    .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))
-    .slice(0, 6)
+  const [currency, setCurrency] = useState('SGD')
+
+  const {
+    currencyLeads,
+    openDeals,
+    won,
+    lost,
+    pipelineValue,
+    upcoming,
+    recentActivities,
+    stageDeals,
+  } = useMemo(() => {
+    const currencyDeals = deals.filter((deal) => dealCurrency(deal) === currency)
+    const dealIds = new Set(currencyDeals.map((deal) => deal.id))
+    const companyIds = new Set(currencyDeals.map((deal) => deal.companyId).filter(Boolean))
+    const currencyLeads = leads.filter((lead) => {
+      if (lead.convertedDealId) return dealIds.has(lead.convertedDealId)
+      return currency === 'SGD'
+    })
+    const leadIds = new Set(currencyLeads.map((lead) => lead.id))
+
+    function inView(item) {
+      if (item.relatedType === 'deal') return dealIds.has(item.relatedId)
+      if (item.relatedType === 'lead') return leadIds.has(item.relatedId)
+      if (item.relatedType === 'company') return companyIds.has(item.relatedId)
+      return currency === 'SGD'
+    }
+
+    const openDeals = currencyDeals.filter((d) => d.stage !== 'won' && d.stage !== 'lost')
+    const won = currencyDeals.filter((d) => d.stage === 'won')
+    const lost = currencyDeals.filter((d) => d.stage === 'lost')
+
+    return {
+      currencyLeads,
+      openDeals,
+      won,
+      lost,
+      pipelineValue: openDeals.reduce((sum, d) => sum + Number(d.value || 0), 0),
+      upcoming: tasks
+        .filter((t) => t.status !== 'done' && inView(t))
+        .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))
+        .slice(0, 6),
+      recentActivities: activities.filter(inView).slice(0, 6),
+      stageDeals: currencyDeals,
+    }
+  }, [activities, currency, deals, leads, tasks])
 
   return (
     <div>
@@ -22,15 +64,28 @@ export default function Dashboard() {
           <h1>Sales dashboard</h1>
           <p>Leads, open deals, pipeline value, won/lost, and upcoming tasks</p>
         </div>
-        <Link className="btn" to="/leads">
-          New lead
-        </Link>
+        <NewButton to="/leads">New lead</NewButton>
+      </div>
+
+      <div className="currency-tabs" role="tablist" aria-label="Currency">
+        {CURRENCIES.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={currency === item.id}
+            className={currency === item.id ? 'active' : ''}
+            onClick={() => setCurrency(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       <div className="grid stats">
-        <Stat label="Leads" value={leads.length} />
+        <Stat label="Leads" value={currencyLeads.length} />
         <Stat label="Open deals" value={openDeals.length} />
-        <Stat label="Pipeline value" value={money(pipelineValue)} />
+        <Stat label="Pipeline value" value={money(pipelineValue, currency)} />
         <Stat label="Won" value={won.length} />
         <Stat label="Lost" value={lost.length} />
       </div>
@@ -61,9 +116,9 @@ export default function Dashboard() {
         </div>
         <div className="card">
           <h3>Recent activities</h3>
-          {activities.slice(0, 6).length === 0 && <Empty text="No activities yet" />}
+          {recentActivities.length === 0 && <Empty text="No activities yet" />}
           <div className="timeline">
-            {activities.slice(0, 6).map((item) => (
+            {recentActivities.map((item) => (
               <div className="timeline-item" key={item.id}>
                 <b>{item.title}</b>
                 <div className="muted">
@@ -79,13 +134,13 @@ export default function Dashboard() {
         <h3>Pipeline overview</h3>
         <div className="grid three">
           {DEAL_STAGES.map((stage) => {
-            const rows = deals.filter((d) => d.stage === stage.id)
+            const rows = stageDeals.filter((d) => d.stage === stage.id)
             const total = rows.reduce((sum, d) => sum + Number(d.value || 0), 0)
             return (
               <div key={stage.id}>
                 <div className="stat-label">{stage.label}</div>
                 <div className="stat-value">{rows.length}</div>
-                <div className="muted">{money(total)}</div>
+                <div className="muted">{rows.length ? money(total, currency) : '—'}</div>
               </div>
             )
           })}

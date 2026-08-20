@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useData } from '../context/DataContext'
 import { TASK_STATUSES, labelOf } from '../constants'
 import { formatDate, isOverdue } from '../utils'
-import { Empty, Field, Modal, Pill } from '../components/ui'
+import { Empty, Field, Modal, NewButton, Pill } from '../components/ui'
 
 export default function Tasks() {
   const { tasks, create, update } = useData()
@@ -29,9 +29,7 @@ export default function Tasks() {
           <h1>Tasks</h1>
           <p>Follow-up task, due date and status</p>
         </div>
-        <button className="btn" onClick={() => setOpen(true)}>
-          New task
-        </button>
+        <NewButton onClick={() => setOpen(true)}>New task</NewButton>
       </div>
       <div className="toolbar">
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ maxWidth: 180 }}>

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { Field, Modal } from '../components/ui'
+import { Field, Modal, NewButton, PhoneField, PhoneText } from '../components/ui'
 
-const emptyCompany = { name: '', industry: '', phone: '', email: '', website: '', address: '' }
+const emptyCompany = { name: '', industry: '', phone: '', phoneCountry: 'SG', email: '', website: '', address: '' }
 
 export default function Companies() {
   const { companies, contacts, deals, create } = useData()
@@ -26,9 +26,7 @@ export default function Companies() {
           <h1>Companies</h1>
           <p>Company profile, plus contacts and deals under each company</p>
         </div>
-        <button className="btn" onClick={() => setOpen(true)}>
-          New company
-        </button>
+        <NewButton onClick={() => setOpen(true)}>New company</NewButton>
       </div>
       <div className="card table-wrap">
         <table>
@@ -47,7 +45,7 @@ export default function Companies() {
               <tr key={company.id} className="clickable" onClick={() => navigate(`/companies/${company.id}`)}>
                 <td>{company.name}</td>
                 <td>{company.industry || '—'}</td>
-                <td>{company.phone || '—'}</td>
+                <td><PhoneText record={company} /></td>
                 <td>{contacts.filter((c) => c.companyId === company.id).length}</td>
                 <td>{deals.filter((d) => d.companyId === company.id).length}</td>
                 <td>{company.ownerName}</td>
@@ -66,9 +64,12 @@ export default function Companies() {
               <Field label="Industry">
                 <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
               </Field>
-              <Field label="Phone">
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </Field>
+              <PhoneField
+                country={form.phoneCountry}
+                number={form.phone}
+                onCountryChange={(phoneCountry) => setForm({ ...form, phoneCountry })}
+                onNumberChange={(phone) => setForm({ ...form, phone })}
+              />
               <Field label="Email">
                 <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>

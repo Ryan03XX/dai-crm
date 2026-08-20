@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, labelOf } from '../constants'
-import { money } from '../utils'
+import { moneyOf } from '../utils'
 import { Pill } from '../components/ui'
 
 export default function Pipeline() {
@@ -46,7 +46,7 @@ export default function Pipeline() {
                 >
                   <b>{deal.name}</b>
                   <div className="meta">{deal.companyName}</div>
-                  <div className="meta">{money(deal.value)}</div>
+                  <div className="meta">{moneyOf(deal)}</div>
                   <div style={{ marginTop: 8 }}>
                     <Pill value={deal.stage} label={labelOf(DEAL_STAGES, deal.stage)} />
                   </div>

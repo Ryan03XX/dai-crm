@@ -4,15 +4,17 @@ import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { searchText } from '../utils'
 
+import { ICONS } from './icons'
+
 const NAV = [
-  { to: '/', label: 'Dashboard' },
-  { to: '/leads', label: 'Leads' },
-  { to: '/companies', label: 'Companies' },
-  { to: '/contacts', label: 'Contacts' },
-  { to: '/deals', label: 'Deals' },
-  { to: '/pipeline', label: 'Pipeline' },
-  { to: '/activities', label: 'Activities' },
-  { to: '/tasks', label: 'Tasks' },
+  { to: '/', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/leads', label: 'Leads', icon: 'leads' },
+  { to: '/companies', label: 'Companies', icon: 'companies' },
+  { to: '/contacts', label: 'Contacts', icon: 'contacts' },
+  { to: '/deals', label: 'Deals', icon: 'deals' },
+  { to: '/pipeline', label: 'Pipeline', icon: 'pipeline' },
+  { to: '/activities', label: 'Activities', icon: 'activities' },
+  { to: '/tasks', label: 'Tasks', icon: 'tasks' },
 ]
 
 export default function Layout() {
@@ -54,13 +56,13 @@ export default function Layout() {
         <nav className="nav">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'}>
-              <i className="mark" />
+              {ICONS[item.icon]}
               {item.label}
             </NavLink>
           ))}
           {isAdmin && (
             <NavLink to="/users">
-              <i className="mark" />
+              {ICONS.users}
               Users
             </NavLink>
           )}
