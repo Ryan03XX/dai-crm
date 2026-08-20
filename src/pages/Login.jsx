@@ -24,13 +24,13 @@ export default function Login() {
       else await signUp(name, email, password)
     } catch (err) {
       const messages = {
-        'auth/invalid-credential': '邮箱或密码不对',
-        'auth/invalid-email': '邮箱格式不对',
-        'auth/email-already-in-use': '这个邮箱已经注册过了',
-        'auth/weak-password': '密码至少 6 位',
-        'auth/operation-not-allowed': '请先在 Firebase 启用 Email/Password 登录',
+        'auth/invalid-credential': 'Incorrect email or password',
+        'auth/invalid-email': 'Please enter a valid email',
+        'auth/email-already-in-use': 'This email is already registered',
+        'auth/weak-password': 'Password must be at least 6 characters',
+        'auth/operation-not-allowed': 'Email/Password sign-in is not enabled in Firebase',
       }
-      setError(messages[err.code] || err.message || '登录失败')
+      setError(messages[err.code] || err.message || 'Unable to sign in')
     } finally {
       setBusy(false)
     }
@@ -40,25 +40,31 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>DAI CRM</h1>
-        <p>第一条销售流程：线索 → 跟进 → 转化 → 管道 → 赢单 / 丢单</p>
+        <p>Lead → Follow up → Convert → Pipeline → Won / Lost</p>
         <form onSubmit={handleSubmit}>
           {mode === 'register' && (
-            <input placeholder="姓名" value={name} onChange={(e) => setName(e.target.value)} required />
+            <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
           )}
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input type="password" placeholder="密码（至少 6 位）" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            type="password"
+            placeholder="Password (min. 6 characters)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           {error && <div className="error">{error}</div>}
           <button className="btn" disabled={busy}>
-            {busy ? '请稍候...' : mode === 'login' ? '登录' : '注册'}
+            {busy ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
         <p>
-          {mode === 'login' ? '还没有账号？' : '已有账号？'}
+          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <button className="linkish" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-            {mode === 'login' ? '注册' : '去登录'}
+            {mode === 'login' ? 'Register' : 'Sign in'}
           </button>
         </p>
-        <p className="muted">第一个注册的人会成为 Admin，之后注册的是 Sales。</p>
+        <p className="muted">The first user to register becomes Admin. Later users are Sales.</p>
       </div>
     </div>
   )
@@ -68,13 +74,13 @@ function SetupGuide() {
   return (
     <div className="auth-page">
       <div className="setup">
-        <h1>先接上 Firebase</h1>
-        <p>把 `.env.example` 复制成 `.env`，填入 Firebase 网页应用配置后重新运行 `npm run dev`。</p>
+        <h1>Connect Firebase first</h1>
+        <p>Copy `.env.example` to `.env`, add your Firebase web app config, then run `npm run dev` again.</p>
         <ol>
-          <li>打开 Firebase Console，创建项目</li>
-          <li>启用 Authentication → Email/Password</li>
-          <li>创建 Firestore Database（测试模式先开，再部署仓库里的 `firestore.rules`）</li>
-          <li>Project settings → Your apps → 添加 Web app，复制配置</li>
+          <li>Open Firebase Console and create a project</li>
+          <li>Enable Authentication → Email/Password</li>
+          <li>Create a Firestore database, then publish `firestore.rules`</li>
+          <li>Project settings → Your apps → add a Web app and copy the config</li>
         </ol>
         <pre>{`VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...

@@ -26,30 +26,30 @@ export default function Tasks() {
     <div>
       <div className="page-head">
         <div>
-          <h1>任务</h1>
-          <p>Follow-up Task + Due Date + Status</p>
+          <h1>Tasks</h1>
+          <p>Follow-up task, due date and status</p>
         </div>
         <button className="btn" onClick={() => setOpen(true)}>
-          新建任务
+          New task
         </button>
       </div>
       <div className="toolbar">
         <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ maxWidth: 180 }}>
-          <option value="open">待办</option>
-          <option value="done">已完成</option>
-          <option value="all">全部</option>
+          <option value="open">Open</option>
+          <option value="done">Done</option>
+          <option value="all">All</option>
         </select>
       </div>
       <div className="card table-wrap">
-        {rows.length === 0 && <Empty text="没有任务" />}
+        {rows.length === 0 && <Empty text="No tasks" />}
         <table>
           <thead>
             <tr>
-              <th>任务</th>
-              <th>关联</th>
-              <th>到期日</th>
-              <th>负责人</th>
-              <th>状态</th>
+              <th>Task</th>
+              <th>Related to</th>
+              <th>Due date</th>
+              <th>Owner</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -67,7 +67,7 @@ export default function Tasks() {
                     <Pill
                       value={isOverdue(task.dueDate, task.status) ? 'lost' : task.status}
                       label={
-                        isOverdue(task.dueDate, task.status) ? '逾期' : labelOf(TASK_STATUSES, task.status)
+                        isOverdue(task.dueDate, task.status) ? 'Overdue' : labelOf(TASK_STATUSES, task.status)
                       }
                     />
                   </button>
@@ -78,26 +78,26 @@ export default function Tasks() {
         </table>
       </div>
       {open && (
-        <Modal title="新建任务" onClose={() => setOpen(false)}>
+        <Modal title="New task" onClose={() => setOpen(false)}>
           <form onSubmit={save}>
             <div className="form-grid">
-              <Field label="任务" className="full">
+              <Field label="Task" className="full">
                 <input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="明天 Follow Up ABC Customer"
+                  placeholder="Follow up ABC Customer tomorrow"
                   required
                 />
               </Field>
-              <Field label="Due Date">
+              <Field label="Due date">
                 <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} required />
               </Field>
             </div>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setOpen(false)}>
-                取消
+                Cancel
               </button>
-              <button className="btn">保存</button>
+              <button className="btn">Save</button>
             </div>
           </form>
         </Modal>

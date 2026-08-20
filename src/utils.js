@@ -1,8 +1,8 @@
 export function money(value) {
   const amount = Number(value || 0)
-  return amount.toLocaleString('en-MY', {
+  return amount.toLocaleString('en-SG', {
     style: 'currency',
-    currency: 'MYR',
+    currency: 'SGD',
     maximumFractionDigits: 0,
   })
 }
@@ -11,7 +11,7 @@ export function formatDate(value) {
   if (!value) return '—'
   const date = value.toDate ? value.toDate() : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString('zh-CN', {
+  return date.toLocaleDateString('en-SG', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -22,9 +22,9 @@ export function formatDateTime(value) {
   if (!value) return '—'
   const date = value.toDate ? value.toDate() : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit',
+  return date.toLocaleString('en-SG', {
     day: '2-digit',
+    month: 'short',
     hour: '2-digit',
     minute: '2-digit',
   })

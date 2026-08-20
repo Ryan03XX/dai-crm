@@ -23,23 +23,23 @@ export default function Companies() {
     <div>
       <div className="page-head">
         <div>
-          <h1>公司</h1>
-          <p>公司资料，以及下面的联系人和商机</p>
+          <h1>Companies</h1>
+          <p>Company profile, plus contacts and deals under each company</p>
         </div>
         <button className="btn" onClick={() => setOpen(true)}>
-          新建公司
+          New company
         </button>
       </div>
       <div className="card table-wrap">
         <table>
           <thead>
             <tr>
-              <th>公司</th>
-              <th>行业</th>
-              <th>电话</th>
-              <th>联系人</th>
-              <th>商机</th>
-              <th>负责人</th>
+              <th>Company</th>
+              <th>Industry</th>
+              <th>Phone</th>
+              <th>Contacts</th>
+              <th>Deals</th>
+              <th>Owner</th>
             </tr>
           </thead>
           <tbody>
@@ -57,33 +57,33 @@ export default function Companies() {
         </table>
       </div>
       {open && (
-        <Modal title="新建公司" onClose={() => setOpen(false)}>
+        <Modal title="New company" onClose={() => setOpen(false)}>
           <form onSubmit={save}>
             <div className="form-grid">
-              <Field label="公司名称">
+              <Field label="Company name">
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </Field>
-              <Field label="行业">
+              <Field label="Industry">
                 <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
               </Field>
-              <Field label="电话">
+              <Field label="Phone">
                 <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </Field>
               <Field label="Email">
                 <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
-              <Field label="网站" className="full">
+              <Field label="Website" className="full">
                 <input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
               </Field>
-              <Field label="地址" className="full">
+              <Field label="Address" className="full">
                 <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </Field>
             </div>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setOpen(false)}>
-                取消
+                Cancel
               </button>
-              <button className="btn">保存</button>
+              <button className="btn">Save</button>
             </div>
           </form>
         </Modal>

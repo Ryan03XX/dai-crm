@@ -1,35 +1,37 @@
 # DAI CRM
 
-Phase 1 MVP：React + Firebase。项目已连接到 Firebase 项目 `dai-crm`。
+Phase 1 MVP built with React + Firebase, connected to the `dai-crm` Firebase project.
 
 **New Lead → Follow Up → Qualified → Convert to Company + Contact + Deal → Pipeline → Won / Lost**
 
-## 本地运行
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-已启用：Authentication（Email/Password）、Firestore、Storage。
+App Hosting needs `npm run build` then `npm start`, which serves `dist` on `PORT` (8080).
 
-发布安全规则：
+Enabled: Authentication (Email/Password), Firestore, Storage.
+
+Publish security rules:
 
 ```bash
 npx firebase deploy --only firestore:rules,storage
 ```
 
-## 账号说明
+## Accounts
 
-- 第一个注册的用户会成为 **Admin**（可看全部客户）
-- 之后注册的用户是 **Sales**（只能看自己的客户）
-- Admin 可在「用户」页改角色
+- The first registered user becomes **Admin** (can see all customers)
+- Later users are **Sales** (can only see their own customers)
+- Admin can change roles on the Users page
 
-## 建议的演示路径
+## Demo flow
 
-1. 注册账号并登录
-2. 新建线索
-3. 在线索详情记录一次跟进（状态会变成「已跟进」）
-4. 把状态改成「已合格」
-5. 点击「转化为公司 + 联系人 + 商机」
-6. 在销售管道里拖拽卡片，直到赢单或丢单
+1. Register and sign in
+2. Create a lead
+3. Log a follow-up on the lead (status becomes Contacted)
+4. Change status to Qualified
+5. Click **Convert to Company + Contact + Deal**
+6. Drag the deal through the pipeline until Won or Lost

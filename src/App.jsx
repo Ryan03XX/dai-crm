@@ -17,7 +17,7 @@ import Users from './pages/Users'
 
 function ProtectedLayout() {
   const { user, loading } = useAuth()
-  if (loading) return <div className="auth-page">加载中...</div>
+  if (loading) return <div className="auth-page">Loading...</div>
   if (!user) return <Navigate to="/login" replace />
   return (
     <DataProvider>

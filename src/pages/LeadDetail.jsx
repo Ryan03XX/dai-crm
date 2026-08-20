@@ -18,7 +18,7 @@ export default function LeadDetail() {
     company: '',
     phone: '',
     email: '',
-    source: '网站',
+    source: 'Website',
     status: 'new',
   })
 
@@ -29,7 +29,7 @@ export default function LeadDetail() {
       company: lead.company || '',
       phone: lead.phone || '',
       email: lead.email || '',
-      source: lead.source || '网站',
+      source: lead.source || 'Website',
       status: lead.status || 'new',
     })
   }, [lead?.id])
@@ -47,7 +47,7 @@ export default function LeadDetail() {
     [tasks, id]
   )
 
-  if (!lead) return <p>线索不存在或正在加载...</p>
+  if (!lead) return <p>Lead not found or still loading...</p>
 
   async function save() {
     await update('leads', lead.id, form)
@@ -82,7 +82,7 @@ export default function LeadDetail() {
       await convertLead(lead, data)
       navigate('/pipeline')
     } catch (err) {
-      alert(err.message || '转化失败')
+      alert(err.message || 'Unable to convert this lead')
     } finally {
       setBusy(false)
     }
@@ -94,54 +94,54 @@ export default function LeadDetail() {
         <div>
           <h1>{lead.name}</h1>
           <p>
-            {lead.company || '未填公司'} · {lead.ownerName}
+            {lead.company || 'No company yet'} · {lead.ownerName}
           </p>
           <div className="flow">
-            <span>New Lead</span>
-            <span>Sales Follow Up</span>
+            <span>New lead</span>
+            <span>Sales follow-up</span>
             <span>Qualified?</span>
             <span>Convert</span>
-            <span>Deal Pipeline</span>
+            <span>Deal pipeline</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {lead.status !== 'converted' && (
             <button className="btn gold" onClick={() => setConvertOpen(true)}>
-              转化为公司 + 联系人 + 商机
+              Convert to Company + Contact + Deal
             </button>
           )}
           <button className="btn" onClick={save}>
-            保存
+            Save
           </button>
         </div>
       </div>
 
       {lead.status === 'converted' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          已转化。查看
-          <Link to={`/companies/${lead.convertedCompanyId}`}> 公司 </Link>
-          和
-          <Link to="/pipeline"> 销售管道</Link>
+          Converted. View the
+          <Link to={`/companies/${lead.convertedCompanyId}`}> company </Link>
+          and the
+          <Link to="/pipeline"> pipeline</Link>.
         </div>
       )}
 
       <div className="grid two">
         <div className="card">
-          <h3>线索资料</h3>
+          <h3>Lead details</h3>
           <div className="form-grid">
-            <Field label="姓名">
+            <Field label="Name">
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </Field>
-            <Field label="公司">
+            <Field label="Company">
               <input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
             </Field>
-            <Field label="电话">
+            <Field label="Phone">
               <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </Field>
             <Field label="Email">
               <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </Field>
-            <Field label="来源">
+            <Field label="Source">
               <select value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}>
                 {LEAD_SOURCES.map((item) => (
                   <option key={item}>{item}</option>
@@ -168,9 +168,9 @@ export default function LeadDetail() {
         </div>
 
         <div className="card">
-          <h3>跟进活动 / 任务</h3>
+          <h3>Follow-up activities / tasks</h3>
           <QuickActivity onSubmit={addActivity} />
-          <QuickTask onSubmit={addTask} defaultTitle={`明天 Follow Up ${lead.name}`} />
+          <QuickTask onSubmit={addTask} defaultTitle={`Follow up ${lead.name} tomorrow`} />
           <div className="timeline" style={{ marginTop: 16 }}>
             {relatedActivities.map((item) => (
               <div className="timeline-item" key={item.id}>
@@ -183,8 +183,8 @@ export default function LeadDetail() {
             ))}
             {relatedTasks.map((item) => (
               <div className="timeline-item" key={item.id}>
-                <b>任务 · {item.title}</b>
-                <div className="muted">到期 {item.dueDate || '—'}</div>
+                <b>Task · {item.title}</b>
+                <div className="muted">Due {item.dueDate || '—'}</div>
               </div>
             ))}
           </div>
@@ -192,35 +192,35 @@ export default function LeadDetail() {
       </div>
 
       {convertOpen && (
-        <Modal title="转化线索" onClose={() => setConvertOpen(false)}>
-          <p className="muted">一次创建 Company + Contact + Deal，然后进入销售管道。</p>
+        <Modal title="Convert lead" onClose={() => setConvertOpen(false)}>
+          <p className="muted">This creates a company, contact and deal, then sends the deal into the pipeline.</p>
           <form onSubmit={handleConvert}>
             <div className="form-grid">
-              <Field label="公司名称">
+              <Field label="Company name">
                 <input name="companyName" defaultValue={lead.company || lead.name} required />
               </Field>
-              <Field label="联系人">
+              <Field label="Contact">
                 <input name="contactName" defaultValue={lead.name} required />
               </Field>
-              <Field label="职位">
-                <input name="position" placeholder="例如 Sales Manager" />
+              <Field label="Position">
+                <input name="position" placeholder="e.g. Sales Manager" />
               </Field>
-              <Field label="商机名称">
-                <input name="dealName" defaultValue={`${lead.company || lead.name} 商机`} required />
+              <Field label="Deal name">
+                <input name="dealName" defaultValue={`${lead.company || lead.name} deal`} required />
               </Field>
-              <Field label="金额">
+              <Field label="Value (SGD)">
                 <input name="value" type="number" min="0" defaultValue="0" required />
               </Field>
-              <Field label="预计成交日">
+              <Field label="Expected close date">
                 <input name="expectedCloseDate" type="date" />
               </Field>
             </div>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setConvertOpen(false)}>
-                取消
+                Cancel
               </button>
               <button className="btn gold" disabled={busy}>
-                {busy ? '转化中...' : '确认转化'}
+                {busy ? 'Converting...' : 'Confirm convert'}
               </button>
             </div>
           </form>

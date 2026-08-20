@@ -16,13 +16,13 @@ export default function Activities() {
     <div>
       <div className="page-head">
         <div>
-          <h1>活动</h1>
-          <p>Call / Meeting / Note / Follow-up，挂在线索、公司或商机上</p>
+          <h1>Activities</h1>
+          <p>Call, meeting, note or follow-up, logged against a lead, company or deal</p>
         </div>
       </div>
       <div className="toolbar">
         <select value={type} onChange={(e) => setType(e.target.value)} style={{ maxWidth: 200 }}>
-          <option value="all">全部类型</option>
+          <option value="all">All types</option>
           {ACTIVITY_TYPES.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
@@ -31,7 +31,7 @@ export default function Activities() {
         </select>
       </div>
       <div className="card">
-        {rows.length === 0 && <Empty text="还没有活动。请先到线索或商机里记录跟进。" />}
+        {rows.length === 0 && <Empty text="No activities yet. Log a follow-up from a lead or deal." />}
         <div className="timeline">
           {rows.map((item) => (
             <div className="timeline-item" key={item.id}>

@@ -45,11 +45,11 @@ export default function Deals() {
     <div>
       <div className="page-head">
         <div>
-          <h1>商机</h1>
-          <p>Deal Name、Customer、Value、Owner、Expected Close Date</p>
+          <h1>Deals</h1>
+          <p>Deal name, customer, value, owner and expected close date</p>
         </div>
         <button className="btn" onClick={() => setOpen(true)}>
-          新建商机
+          New deal
         </button>
       </div>
 
@@ -58,11 +58,11 @@ export default function Deals() {
           <table>
             <thead>
               <tr>
-                <th>商机</th>
-                <th>客户</th>
-                <th>金额</th>
-                <th>负责人</th>
-                <th>预计成交</th>
+                <th>Deal</th>
+                <th>Customer</th>
+                <th>Value</th>
+                <th>Owner</th>
+                <th>Expected close</th>
                 <th>Stage</th>
               </tr>
             </thead>
@@ -111,7 +111,7 @@ export default function Deals() {
                   }
                 />
                 <QuickTask
-                  defaultTitle={`跟进 ${selected.name}`}
+                  defaultTitle={`Follow up ${selected.name}`}
                   onSubmit={(payload) =>
                     create('tasks', {
                       ...payload,
@@ -132,21 +132,21 @@ export default function Deals() {
               </div>
             </>
           ) : (
-            <p className="muted">选择一条商机查看详情，或去销售管道拖拽 Stage。</p>
+            <p className="muted">Select a deal to view details, or drag stages on the pipeline.</p>
           )}
         </div>
       </div>
 
       {open && (
-        <Modal title="新建商机" onClose={() => setOpen(false)}>
+        <Modal title="New deal" onClose={() => setOpen(false)}>
           <form onSubmit={save}>
             <div className="form-grid">
-              <Field label="商机名称" className="full">
+              <Field label="Deal name" className="full">
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </Field>
-              <Field label="客户公司">
+              <Field label="Customer company">
                 <select value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}>
-                  <option value="">未选择</option>
+                  <option value="">Not selected</option>
                   {companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -154,9 +154,9 @@ export default function Deals() {
                   ))}
                 </select>
               </Field>
-              <Field label="联系人">
+              <Field label="Contact">
                 <select value={form.contactId} onChange={(e) => setForm({ ...form, contactId: e.target.value })}>
-                  <option value="">未选择</option>
+                  <option value="">Not selected</option>
                   {contacts
                     .filter((c) => !form.companyId || c.companyId === form.companyId)
                     .map((c) => (
@@ -166,10 +166,10 @@ export default function Deals() {
                     ))}
                 </select>
               </Field>
-              <Field label="金额">
+              <Field label="Value (SGD)">
                 <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
               </Field>
-              <Field label="预计成交日">
+              <Field label="Expected close date">
                 <input
                   type="date"
                   value={form.expectedCloseDate}
@@ -179,9 +179,9 @@ export default function Deals() {
             </div>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setOpen(false)}>
-                取消
+                Cancel
               </button>
-              <button className="btn">保存</button>
+              <button className="btn">Save</button>
             </div>
           </form>
         </Modal>

@@ -26,26 +26,26 @@ export default function Contacts() {
     <div>
       <div className="page-head">
         <div>
-          <h1>联系人</h1>
-          <p>Contact Name、Position、Phone、Email、Company</p>
+          <h1>Contacts</h1>
+          <p>Contact name, position, phone, email and company</p>
         </div>
         <button className="btn" onClick={() => setOpen(true)}>
-          新建联系人
+          New contact
         </button>
       </div>
       <div className="toolbar">
-        <input placeholder="筛选联系人" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 280 }} />
+        <input placeholder="Filter contacts" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 280 }} />
       </div>
       <div className="card table-wrap">
         <table>
           <thead>
             <tr>
-              <th>姓名</th>
-              <th>职位</th>
-              <th>电话</th>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Phone</th>
               <th>Email</th>
-              <th>公司</th>
-              <th>负责人</th>
+              <th>Company</th>
+              <th>Owner</th>
             </tr>
           </thead>
           <tbody>
@@ -67,24 +67,24 @@ export default function Contacts() {
         </table>
       </div>
       {open && (
-        <Modal title="新建联系人" onClose={() => setOpen(false)}>
+        <Modal title="New contact" onClose={() => setOpen(false)}>
           <form onSubmit={save}>
             <div className="form-grid">
-              <Field label="姓名">
+              <Field label="Name">
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
               </Field>
-              <Field label="职位">
+              <Field label="Position">
                 <input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} />
               </Field>
-              <Field label="电话">
+              <Field label="Phone">
                 <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </Field>
               <Field label="Email">
                 <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </Field>
-              <Field label="公司" className="full">
+              <Field label="Company" className="full">
                 <select value={form.companyId} onChange={(e) => setForm({ ...form, companyId: e.target.value })}>
-                  <option value="">未选择</option>
+                  <option value="">Not selected</option>
                   {companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -95,9 +95,9 @@ export default function Contacts() {
             </div>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setOpen(false)}>
-                取消
+                Cancel
               </button>
-              <button className="btn">保存</button>
+              <button className="btn">Save</button>
             </div>
           </form>
         </Modal>

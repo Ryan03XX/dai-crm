@@ -16,7 +16,7 @@ export function QuickActivity({ onSubmit }) {
 
   return (
     <form onSubmit={handleSubmit} className="form-grid" style={{ marginBottom: 12 }}>
-      <Field label="类型">
+      <Field label="Type">
         <select value={type} onChange={(e) => setType(e.target.value)}>
           {ACTIVITY_TYPES.map((item) => (
             <option key={item.id} value={item.id}>
@@ -25,14 +25,14 @@ export function QuickActivity({ onSubmit }) {
           ))}
         </select>
       </Field>
-      <Field label="标题">
-        <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="例如 电话沟通需求" />
+      <Field label="Title">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Called to understand requirements" />
       </Field>
-      <Field label="内容" className="full">
+      <Field label="Notes" className="full">
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
       </Field>
       <div>
-        <button className="btn light">记录活动</button>
+        <button className="btn light">Log activity</button>
       </div>
     </form>
   )
@@ -50,14 +50,14 @@ export function QuickTask({ onSubmit, defaultTitle = '' }) {
 
   return (
     <form onSubmit={handleSubmit} className="form-grid">
-      <Field label="Follow-up Task">
+      <Field label="Follow-up task">
         <input value={title} onChange={(e) => setTitle(e.target.value)} required />
       </Field>
-      <Field label="Due Date">
+      <Field label="Due date">
         <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
       </Field>
       <div>
-        <button className="btn light">添加任务</button>
+        <button className="btn light">Add task</button>
       </div>
     </form>
   )

@@ -18,8 +18,8 @@ export default function Pipeline() {
     <div>
       <div className="page-head">
         <div>
-          <h1>销售管道</h1>
-          <p>拖拽商机卡片，更新目前所在 Stage，直到 Won / Lost</p>
+          <h1>Pipeline</h1>
+          <p>Drag deal cards to update the stage until Won or Lost</p>
         </div>
       </div>
       <div className="kanban">

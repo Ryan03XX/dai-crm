@@ -5,14 +5,14 @@ import { useData } from '../context/DataContext'
 import { searchText } from '../utils'
 
 const NAV = [
-  { to: '/', label: '仪表盘' },
-  { to: '/leads', label: '线索' },
-  { to: '/companies', label: '公司' },
-  { to: '/contacts', label: '联系人' },
-  { to: '/deals', label: '商机' },
-  { to: '/pipeline', label: '销售管道' },
-  { to: '/activities', label: '活动' },
-  { to: '/tasks', label: '任务' },
+  { to: '/', label: 'Dashboard' },
+  { to: '/leads', label: 'Leads' },
+  { to: '/companies', label: 'Companies' },
+  { to: '/contacts', label: 'Contacts' },
+  { to: '/deals', label: 'Deals' },
+  { to: '/pipeline', label: 'Pipeline' },
+  { to: '/activities', label: 'Activities' },
+  { to: '/tasks', label: 'Tasks' },
 ]
 
 export default function Layout() {
@@ -25,11 +25,11 @@ export default function Layout() {
     const keyword = q.trim()
     if (keyword.length < 2) return []
     const groups = [
-      ['线索', 'leads', (row) => `/leads/${row.id}`],
-      ['公司', 'companies', (row) => `/companies/${row.id}`],
-      ['联系人', 'contacts', (row) => (row.companyId ? `/companies/${row.companyId}` : '/contacts')],
-      ['商机', 'deals', (row) => `/deals?id=${row.id}`],
-      ['销售', 'users', () => '/users'],
+      ['Lead', 'leads', (row) => `/leads/${row.id}`],
+      ['Company', 'companies', (row) => `/companies/${row.id}`],
+      ['Contact', 'contacts', (row) => (row.companyId ? `/companies/${row.companyId}` : '/contacts')],
+      ['Deal', 'deals', (row) => `/deals?id=${row.id}`],
+      ['User', 'users', () => '/users'],
     ]
     return groups.flatMap(([label, key, toPath]) =>
       data[key]
@@ -61,13 +61,13 @@ export default function Layout() {
           {isAdmin && (
             <NavLink to="/users">
               <i className="mark" />
-              用户
+              Users
             </NavLink>
           )}
         </nav>
         <div className="sidebar-foot">
           <div>{profile?.name}</div>
-          <small>{isAdmin ? 'Admin · 可看全部客户' : 'Sales · 只看自己的客户'}</small>
+          <small>{isAdmin ? 'Admin · can see all customers' : 'Sales · own customers only'}</small>
         </div>
       </aside>
 
@@ -75,13 +75,13 @@ export default function Layout() {
         <header className="topbar">
           <div className="search-wrap">
             <input
-              placeholder="搜索客户、联系人、商机、销售..."
+              placeholder="Search companies, contacts, deals, salespeople..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
             {q.trim().length >= 2 && (
               <div className="search-results">
-                {results.length === 0 && <div className="empty-search">没有匹配结果</div>}
+                {results.length === 0 && <div className="empty-search">No matching results</div>}
                 {results.map((item) => (
                   <a
                     key={`${item.label}-${item.id}`}
@@ -102,7 +102,7 @@ export default function Layout() {
           <div className="user-chip">
             <div className="avatar">{(profile?.name || 'U').slice(0, 1)}</div>
             <button className="ghost" onClick={signOut}>
-              退出
+              Log out
             </button>
           </div>
         </header>

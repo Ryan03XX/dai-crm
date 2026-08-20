@@ -1,31 +1,31 @@
 export const LEAD_STATUSES = [
-  { id: 'new', label: '新线索' },
-  { id: 'contacted', label: '已跟进' },
-  { id: 'qualified', label: '已合格' },
-  { id: 'unqualified', label: '不合格' },
-  { id: 'converted', label: '已转化' },
+  { id: 'new', label: 'New' },
+  { id: 'contacted', label: 'Contacted' },
+  { id: 'qualified', label: 'Qualified' },
+  { id: 'unqualified', label: 'Unqualified' },
+  { id: 'converted', label: 'Converted' },
 ]
 
 export const DEAL_STAGES = [
-  { id: 'qualification', label: '资格确认' },
-  { id: 'proposal', label: '方案报价' },
-  { id: 'negotiation', label: '商务谈判' },
-  { id: 'won', label: '赢单' },
-  { id: 'lost', label: '丢单' },
+  { id: 'qualification', label: 'Qualification' },
+  { id: 'proposal', label: 'Proposal' },
+  { id: 'negotiation', label: 'Negotiation' },
+  { id: 'won', label: 'Won' },
+  { id: 'lost', label: 'Lost' },
 ]
 
-export const LEAD_SOURCES = ['网站', '转介绍', '展会', '电话', '社交', '其他']
+export const LEAD_SOURCES = ['Website', 'Referral', 'Event', 'Call', 'Social', 'Others']
 
 export const ACTIVITY_TYPES = [
-  { id: 'call', label: '电话' },
-  { id: 'meeting', label: '会议' },
-  { id: 'note', label: '备注' },
-  { id: 'followup', label: '跟进' },
+  { id: 'call', label: 'Call' },
+  { id: 'meeting', label: 'Meeting' },
+  { id: 'note', label: 'Note' },
+  { id: 'followup', label: 'Follow-up' },
 ]
 
 export const TASK_STATUSES = [
-  { id: 'open', label: '待办' },
-  { id: 'done', label: '已完成' },
+  { id: 'open', label: 'Open' },
+  { id: 'done', label: 'Done' },
 ]
 
 export function labelOf(list, id) {

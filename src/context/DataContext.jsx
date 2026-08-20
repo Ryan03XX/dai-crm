@@ -119,8 +119,8 @@ export function DataProvider({ children }) {
         })
         batch.set(activityRef, {
           type: 'note',
-          title: `线索已转化：${lead.name}`,
-          description: `已创建公司、联系人和商机「${form.dealName}」`,
+          title: `Lead converted: ${lead.name}`,
+          description: `Created company, contact and deal "${form.dealName}"`,
           relatedType: 'deal',
           relatedId: dealRef.id,
           relatedName: form.dealName,

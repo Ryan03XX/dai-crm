@@ -6,23 +6,23 @@ export default function Users() {
   const { isAdmin } = useAuth()
   const { users, update } = useData()
 
-  if (!isAdmin) return <p>只有 Admin 可以管理用户。</p>
+  if (!isAdmin) return <p>Only Admin can manage users.</p>
 
   return (
     <div>
       <div className="page-head">
         <div>
-          <h1>用户</h1>
-          <p>Sales 只管理自己的客户，Admin 可以看全部</p>
+          <h1>Users</h1>
+          <p>Sales can manage their own customers. Admin can see everyone.</p>
         </div>
       </div>
       <div className="card table-wrap">
         <table>
           <thead>
             <tr>
-              <th>姓名</th>
+              <th>Name</th>
               <th>Email</th>
-              <th>角色</th>
+              <th>Role</th>
             </tr>
           </thead>
           <tbody>
