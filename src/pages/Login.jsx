@@ -4,12 +4,15 @@ import { isFirebaseConfigured } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import { DaiLogo } from '../components/ui'
 
+const REMEMBER_EMAIL_KEY = 'dai-crm-remember-email'
+
 export default function Login() {
   const { user, signIn, signUp } = useAuth()
   const [mode, setMode] = useState('login')
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => localStorage.getItem(REMEMBER_EMAIL_KEY) || '')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -21,8 +24,13 @@ export default function Login() {
     setError('')
     setBusy(true)
     try {
-      if (mode === 'login') await signIn(email, password)
-      else await signUp(name, email, password)
+      if (mode === 'login') {
+        if (remember) localStorage.setItem(REMEMBER_EMAIL_KEY, email)
+        else localStorage.removeItem(REMEMBER_EMAIL_KEY)
+        await signIn(email, password, remember)
+      } else {
+        await signUp(name, email, password)
+      }
     } catch (err) {
       const messages = {
         'auth/invalid-credential': 'Incorrect email or password',
@@ -44,7 +52,6 @@ export default function Login() {
       <div className="auth-shell">
         <aside className="auth-brand">
           <DaiLogo className="auth-logo" />
-          <strong>DAI CRM</strong>
           <p>Track leads, opportunities and pipeline in one workspace.</p>
         </aside>
         <div className="auth-card">
@@ -71,6 +78,12 @@ export default function Login() {
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
               />
             </label>
+            {isLogin && (
+              <label className="remember-me">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                Remember me
+              </label>
+            )}
             {error && <div className="error">{error}</div>}
             <button className="btn auth-submit" disabled={busy}>
               {busy ? 'Please wait...' : isLogin ? 'Sign in' : 'Create account'}

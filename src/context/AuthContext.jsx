@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
+  browserLocalPersistence,
+  browserSessionPersistence,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  setPersistence,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
@@ -60,7 +63,8 @@ export function AuthProvider({ children }) {
       profile,
       loading,
       isAdmin: profile?.role === 'admin',
-      async signIn(email, password) {
+      async signIn(email, password, remember = true) {
+        await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
         await signInWithEmailAndPassword(auth, email, password)
       },
       async signUp(name, email, password) {

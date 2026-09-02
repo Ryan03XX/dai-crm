@@ -51,10 +51,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="brand">
           <DaiLogo className="brand-logo" />
-          <div>
-            <strong>DAI CRM</strong>
-            <span>Sales workspace</span>
-          </div>
+          <span>Sales workspace</span>
         </div>
         <nav className="nav">
           {NAV.map((item) => (

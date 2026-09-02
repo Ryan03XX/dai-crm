@@ -16,7 +16,7 @@ export function Modal({ title, children, onClose }) {
 }
 
 export function DaiLogo({ className = '' }) {
-  return <img className={`dai-logo ${className}`} src="/dai-logo.svg" alt="DAI" />
+  return <img className={`dai-logo ${className}`} src="/dai-logo.png" alt="DIMENSIONAI" />
 }
 
 export function Hint({ text }) {
