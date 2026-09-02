@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { searchText } from '../utils'
-
+import { DaiLogo } from './ui'
 import { ICONS } from './icons'
 
 const NAV = [
@@ -11,7 +11,7 @@ const NAV = [
   { to: '/leads', label: 'Leads', icon: 'leads' },
   { to: '/companies', label: 'Companies', icon: 'companies' },
   { to: '/contacts', label: 'Contacts', icon: 'contacts' },
-  { to: '/deals', label: 'Deals', icon: 'deals' },
+  { to: '/deals', label: 'Opportunities', icon: 'deals' },
   { to: '/pipeline', label: 'Pipeline', icon: 'pipeline' },
   { to: '/activities', label: 'Activities', icon: 'activities' },
   { to: '/tasks', label: 'Tasks', icon: 'tasks' },
@@ -30,7 +30,7 @@ export default function Layout() {
       ['Lead', 'leads', (row) => `/leads/${row.id}`],
       ['Company', 'companies', (row) => `/companies/${row.id}`],
       ['Contact', 'contacts', (row) => (row.companyId ? `/companies/${row.companyId}` : '/contacts')],
-      ['Deal', 'deals', (row) => `/deals?id=${row.id}`],
+      ['Opportunity', 'deals', (row) => `/deals?id=${row.id}`],
       ['User', 'users', () => '/users'],
     ]
     return groups.flatMap(([label, key, toPath]) =>
@@ -50,8 +50,11 @@ export default function Layout() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <strong>DAI CRM</strong>
-          <span>Phase 1 · MVP</span>
+          <DaiLogo className="brand-logo" />
+          <div>
+            <strong>DAI CRM</strong>
+            <span>Sales workspace</span>
+          </div>
         </div>
         <nav className="nav">
           {NAV.map((item) => (
@@ -77,7 +80,7 @@ export default function Layout() {
         <header className="topbar">
           <div className="search-wrap">
             <input
-              placeholder="Search companies, contacts, deals, salespeople..."
+              placeholder="Search companies, contacts, opportunities, salespeople..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />

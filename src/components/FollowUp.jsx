@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { ACTIVITY_TYPES } from '../constants'
+import { todayInputDate } from '../utils'
 import { Field } from './ui'
 
 export function QuickActivity({ onSubmit }) {
   const [type, setType] = useState('followup')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [activityDate, setActivityDate] = useState(todayInputDate())
 
   async function handleSubmit(e) {
     e.preventDefault()
-    await onSubmit({ type, title, description })
+    await onSubmit({ type, title, description, activityDate: activityDate || todayInputDate() })
     setTitle('')
     setDescription('')
+    setActivityDate(todayInputDate())
   }
 
   return (
@@ -25,7 +28,10 @@ export function QuickActivity({ onSubmit }) {
           ))}
         </select>
       </Field>
-      <Field label="Title">
+      <Field label="Date">
+        <input type="date" value={activityDate} onChange={(e) => setActivityDate(e.target.value)} required />
+      </Field>
+      <Field label="Title" className="full">
         <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Called to understand requirements" />
       </Field>
       <Field label="Notes" className="full">

@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { ACTIVITY_TYPES, LEAD_SOURCES, LEAD_STATUSES, labelOf } from '../constants'
+import {
+  ACTIVITY_TYPES,
+  COUNTRY_CODES,
+  LEAD_CATEGORIES,
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  NAME_HINT,
+  labelOf,
+} from '../constants'
 import { Field, Modal, MoneyField, PhoneField, Pill } from '../components/ui'
+import { TrackerFields } from '../components/TrackerFields'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
-import { formatDateTime } from '../utils'
+import { activitySortValue, agingLabel, currentSchedule, formatDate, formatDateTime, suggestedLeadName } from '../utils'
 
 export default function LeadDetail() {
   const { id } = useParams()
@@ -12,6 +21,7 @@ export default function LeadDetail() {
   const { leads, activities, tasks, update, create, convertLead } = useData()
   const lead = leads.find((item) => item.id === id)
   const [convertOpen, setConvertOpen] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [dealCurrency, setDealCurrency] = useState('')
   const [dealAmount, setDealAmount] = useState('')
@@ -23,6 +33,9 @@ export default function LeadDetail() {
     email: '',
     source: 'Website',
     status: 'new',
+    category: 'dc-capacity',
+    country: 'SG',
+    schedule: currentSchedule(),
   })
 
   useEffect(() => {
@@ -35,6 +48,9 @@ export default function LeadDetail() {
       email: lead.email || '',
       source: lead.source || 'Website',
       status: lead.status || 'new',
+      category: lead.category || 'dc-capacity',
+      country: lead.country || lead.phoneCountry || 'SG',
+      schedule: lead.schedule || currentSchedule(),
     })
   }, [lead?.id])
 
@@ -43,13 +59,24 @@ export default function LeadDetail() {
   }, [lead?.status])
 
   const relatedActivities = useMemo(
-    () => activities.filter((item) => item.relatedType === 'lead' && item.relatedId === id),
+    () =>
+      activities
+        .filter((item) => item.relatedType === 'lead' && item.relatedId === id)
+        .slice()
+        .sort((a, b) => activitySortValue(b) - activitySortValue(a)),
     [activities, id]
   )
   const relatedTasks = useMemo(
     () => tasks.filter((item) => item.relatedType === 'lead' && item.relatedId === id),
     [tasks, id]
   )
+
+  const suggestion = suggestedLeadName({
+    company: form.company,
+    country: form.country,
+    category: labelOf(LEAD_CATEGORIES, form.category),
+    schedule: form.schedule,
+  })
 
   if (!lead) return <p>Lead not found or still loading...</p>
 
@@ -80,14 +107,20 @@ export default function LeadDetail() {
 
   async function handleConvert(e) {
     e.preventDefault()
+    if (!confirmed) {
+      alert('Please confirm this lead should become an opportunity.')
+      return
+    }
     setBusy(true)
     try {
       const data = Object.fromEntries(new FormData(e.target))
       data.currency = dealCurrency
       data.value = dealAmount
-      await convertLead(lead, data)
+      await update('leads', lead.id, form)
+      await convertLead({ ...lead, ...form }, data)
       setDealCurrency('')
       setDealAmount('')
+      setConfirmed(false)
       navigate('/pipeline')
     } catch (err) {
       alert(err.message || 'Unable to convert this lead')
@@ -102,14 +135,14 @@ export default function LeadDetail() {
         <div>
           <h1>{lead.name}</h1>
           <p>
-            {lead.company || 'No company yet'} · {lead.ownerName}
+            {lead.company || 'No company yet'} · {lead.ownerName} · Aging {agingLabel(lead.createdAt)}
           </p>
           <div className="flow">
             <span>New lead</span>
             <span>Sales follow-up</span>
             <span>Qualified?</span>
-            <span>Convert</span>
-            <span>Deal pipeline</span>
+            <span>Confirm opportunity</span>
+            <span>Pipeline</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -117,9 +150,10 @@ export default function LeadDetail() {
             <button className="btn gold" onClick={() => {
               setDealCurrency('')
               setDealAmount('')
+              setConfirmed(false)
               setConvertOpen(true)
             }}>
-              Convert to Company + Contact + Deal
+              Convert to Opportunity
             </button>
           )}
           <button className="btn" onClick={save}>
@@ -130,7 +164,7 @@ export default function LeadDetail() {
 
       {lead.status === 'converted' && (
         <div className="card" style={{ marginBottom: 16 }}>
-          Converted. View the
+          Converted to an opportunity. View the
           <Link to={`/companies/${lead.convertedCompanyId}`}> company </Link>
           and the
           <Link to="/pipeline"> pipeline</Link>.
@@ -141,11 +175,46 @@ export default function LeadDetail() {
         <div className="card">
           <h3>Lead details</h3>
           <div className="form-grid">
-            <Field label="Name">
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </Field>
+            <div>
+              <Field label="Name" hint={NAME_HINT}>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  title={NAME_HINT}
+                />
+              </Field>
+              <button type="button" className="linkish suggest-name" onClick={() => setForm({ ...form, name: suggestion })}>
+                Use suggested name: {suggestion}
+              </button>
+            </div>
             <Field label="Company">
               <input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+            </Field>
+            <Field label="Category">
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                {LEAD_CATEGORIES.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Country">
+              <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
+                {COUNTRY_CODES.map((item) => (
+                  <option key={item.iso} value={item.iso}>
+                    {item.iso} · {item.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Schedule (MMYY)">
+              <input
+                value={form.schedule}
+                onChange={(e) => setForm({ ...form, schedule: e.target.value })}
+                placeholder="0926"
+                maxLength={4}
+              />
             </Field>
             <PhoneField
               country={form.phoneCountry}
@@ -154,7 +223,7 @@ export default function LeadDetail() {
               onNumberChange={(phone) => setForm({ ...form, phone })}
             />
             <Field label="Email">
-              <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </Field>
             <Field label="Source">
               <select value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}>
@@ -177,8 +246,9 @@ export default function LeadDetail() {
               </select>
             </Field>
           </div>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Pill value={lead.status} label={labelOf(LEAD_STATUSES, lead.status)} />
+            <Pill value={form.category} label={labelOf(LEAD_CATEGORIES, form.category)} />
           </div>
         </div>
 
@@ -193,7 +263,7 @@ export default function LeadDetail() {
                   {labelOf(ACTIVITY_TYPES, item.type)} · {item.title}
                 </b>
                 <div className="muted">{item.description}</div>
-                <div className="muted">{formatDateTime(item.createdAt)}</div>
+                <div className="muted">{formatDate(item.activityDate) !== '—' ? formatDate(item.activityDate) : formatDateTime(item.createdAt)}</div>
               </div>
             ))}
             {relatedTasks.map((item) => (
@@ -207,8 +277,10 @@ export default function LeadDetail() {
       </div>
 
       {convertOpen && (
-        <Modal title="Convert lead" onClose={() => setConvertOpen(false)}>
-          <p className="muted">This creates a company, contact and deal, then sends the deal into the pipeline.</p>
+        <Modal title="Convert to opportunity" onClose={() => setConvertOpen(false)}>
+          <p className="muted">
+            Confirm this lead first. After confirmation it becomes an opportunity and appears in the pipeline.
+          </p>
           <form onSubmit={handleConvert}>
             <div className="form-grid">
               <Field label="Company name">
@@ -220,8 +292,8 @@ export default function LeadDetail() {
               <Field label="Position">
                 <input name="position" placeholder="e.g. Sales Manager" />
               </Field>
-              <Field label="Deal name">
-                <input name="dealName" defaultValue={`${lead.company || lead.name} deal`} required />
+              <Field label="Project / opportunity name">
+                <input name="dealName" defaultValue={lead.name || `${lead.company || lead.name} opportunity`} required />
               </Field>
               <MoneyField
                 currency={dealCurrency}
@@ -232,12 +304,29 @@ export default function LeadDetail() {
               <Field label="Expected close date">
                 <input name="expectedCloseDate" type="date" />
               </Field>
+              <Field label="Next step">
+                <input name="nextStep" placeholder="e.g. Send proposal" />
+              </Field>
+              <Field label="Probability %">
+                <input name="probability" type="number" min="0" max="100" defaultValue="20" />
+              </Field>
             </div>
+            <TrackerFields
+              named
+              values={{
+                endUser: lead.company || '',
+                deliverySchedule: lead.schedule || '',
+              }}
+            />
+            <label className="confirm-check">
+              <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} required />
+              I confirm this lead is qualified and should become an opportunity.
+            </label>
             <div className="modal-actions">
               <button type="button" className="btn light" onClick={() => setConvertOpen(false)}>
                 Cancel
               </button>
-              <button className="btn gold" disabled={busy}>
+              <button className="btn gold" disabled={busy || !confirmed}>
                 {busy ? 'Converting...' : 'Confirm convert'}
               </button>
             </div>

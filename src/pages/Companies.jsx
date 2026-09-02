@@ -24,7 +24,7 @@ export default function Companies() {
       <div className="page-head">
         <div>
           <h1>Companies</h1>
-          <p>Company profile, plus contacts and deals under each company</p>
+          <p>Company profile, plus contacts and opportunities under each company</p>
         </div>
         <NewButton onClick={() => setOpen(true)}>New company</NewButton>
       </div>
@@ -36,7 +36,7 @@ export default function Companies() {
               <th>Industry</th>
               <th>Phone</th>
               <th>Contacts</th>
-              <th>Deals</th>
+              <th>Opportunities</th>
               <th>Owner</th>
             </tr>
           </thead>

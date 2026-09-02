@@ -47,7 +47,7 @@ export default function CompanyDetail() {
         <div>
           <h1>{company.name}</h1>
           <p>
-            Company profile · {people.length} contacts · {companyDeals.length} deals
+            Company profile · {people.length} contacts · {companyDeals.length} opportunities
           </p>
         </div>
         <button className="btn" onClick={save}>
@@ -122,7 +122,7 @@ export default function CompanyDetail() {
           ))}
         </div>
         <div className="card">
-          <h3>Deals</h3>
+          <h3>Opportunities</h3>
           {companyDeals.map((deal) => (
             <div key={deal.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
               <Link to={`/deals?id=${deal.id}`}>

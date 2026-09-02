@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { isFirebaseConfigured } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import { DaiLogo } from '../components/ui'
 
 export default function Login() {
   const { user, signIn, signUp } = useAuth()
@@ -42,9 +43,9 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-shell">
         <aside className="auth-brand">
-          <div className="auth-mark">D</div>
+          <DaiLogo className="auth-logo" />
           <strong>DAI CRM</strong>
-          <p>A simple workspace for your sales team.</p>
+          <p>Track leads, opportunities and pipeline in one workspace.</p>
         </aside>
         <div className="auth-card">
           <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>

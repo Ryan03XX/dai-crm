@@ -64,6 +64,67 @@ export const COUNTRY_CODES = [
 
 export const DEFAULT_PHONE_COUNTRY = 'SG'
 
+export const LEAD_CATEGORIES = [
+  { id: 'dc-capacity', label: 'DC capacity' },
+  { id: 'eu-compute', label: 'EU compute' },
+  { id: 'asset-recovery', label: 'Asset recovery' },
+  { id: 'others', label: 'Others' },
+]
+
+export const NAME_HINT =
+  'Recommended format: Company_CountryCode_scope_MMYY. Example: Acme_SG_DC-capacity_0926'
+
+export const TRACKER_GROUPS = [
+  {
+    id: 'project',
+    label: 'Project Information',
+    columns: [
+      { key: 'name', label: 'Project' },
+      { key: 'ncp', label: 'NCP' },
+      { key: 'endUser', label: 'End User' },
+      { key: 'gpuModel', label: 'GPU Model' },
+      { key: 'gpuQty', label: 'GPU Qty' },
+      { key: 'oem', label: 'OEM' },
+      { key: 'deliverySchedule', label: 'Delivery Schedule' },
+    ],
+  },
+  {
+    id: 'dc',
+    label: 'Data Center Information',
+    columns: [
+      { key: 'dcVendor', label: 'DC Vendor' },
+      { key: 'dcSite', label: 'DC Site (City + Site Name)' },
+      { key: 'capacityMw', label: 'Capacity (MW)' },
+    ],
+  },
+  {
+    id: 'pm',
+    label: 'Project Management',
+    columns: [
+      { key: 'comments', label: 'Comments' },
+      { key: 'stage', label: 'Stage' },
+      { key: 'value', label: 'Value' },
+      { key: 'ownerName', label: 'Owner' },
+      { key: 'aging', label: 'Aging' },
+    ],
+  },
+]
+
+export const TRACKER_FORM_FIELDS = [
+  { key: 'ncp', label: 'NCP', group: 'project' },
+  { key: 'endUser', label: 'End User', group: 'project' },
+  { key: 'gpuModel', label: 'GPU Model', group: 'project' },
+  { key: 'gpuQty', label: 'GPU Qty', group: 'project', type: 'number' },
+  { key: 'oem', label: 'OEM', group: 'project' },
+  { key: 'deliverySchedule', label: 'Delivery Schedule', group: 'project', placeholder: 'e.g. 2026 Q4' },
+  { key: 'dcVendor', label: 'DC Vendor', group: 'dc' },
+  { key: 'dcSite', label: 'DC Site (City + Site Name)', group: 'dc' },
+  { key: 'capacityMw', label: 'Capacity (MW)', group: 'dc', type: 'number', step: '0.01' },
+  { key: 'comments', label: 'Comments', group: 'pm', type: 'textarea', full: true },
+]
+
+export const TRACKER_EMPTY = Object.fromEntries(TRACKER_FORM_FIELDS.map((item) => [item.key, '']))
+
 export function labelOf(list, id) {
   return list.find((item) => item.id === id)?.label || id
 }

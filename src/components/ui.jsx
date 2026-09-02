@@ -15,10 +15,26 @@ export function Modal({ title, children, onClose }) {
   )
 }
 
-export function Field({ label, children, className = '' }) {
+export function DaiLogo({ className = '' }) {
+  return <img className={`dai-logo ${className}`} src="/dai-logo.svg" alt="DAI" />
+}
+
+export function Hint({ text }) {
+  return (
+    <span className="hint" tabIndex={0}>
+      i
+      <span className="hint-pop">{text}</span>
+    </span>
+  )
+}
+
+export function Field({ label, children, className = '', hint }) {
   return (
     <label className={`field ${className}`}>
-      <span>{label}</span>
+      <span className="field-label">
+        {label}
+        {hint ? <Hint text={hint} /> : null}
+      </span>
       {children}
     </label>
   )

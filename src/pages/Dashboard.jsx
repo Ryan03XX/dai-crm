@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { formatDate, isOverdue, money } from '../utils'
+import { activitySortValue, avgAgingDays, formatDate, isOpenDeal, isOverdue, money, opportunities } from '../utils'
 import { CURRENCIES, labelOf, DEAL_STAGES, TASK_STATUSES } from '../constants'
 import { Empty, NewButton, Pill } from '../components/ui'
 
@@ -18,11 +19,12 @@ export default function Dashboard() {
     won,
     lost,
     pipelineValue,
+    velocityDays,
     upcoming,
     recentActivities,
     stageDeals,
   } = useMemo(() => {
-    const currencyDeals = deals.filter((deal) => dealCurrency(deal) === currency)
+    const currencyDeals = opportunities(deals).filter((deal) => dealCurrency(deal) === currency)
     const dealIds = new Set(currencyDeals.map((deal) => deal.id))
     const companyIds = new Set(currencyDeals.map((deal) => deal.companyId).filter(Boolean))
     const currencyLeads = leads.filter((lead) => {
@@ -38,7 +40,7 @@ export default function Dashboard() {
       return currency === 'SGD'
     }
 
-    const openDeals = currencyDeals.filter((d) => d.stage !== 'won' && d.stage !== 'lost')
+    const openDeals = currencyDeals.filter(isOpenDeal)
     const won = currencyDeals.filter((d) => d.stage === 'won')
     const lost = currencyDeals.filter((d) => d.stage === 'lost')
 
@@ -48,11 +50,16 @@ export default function Dashboard() {
       won,
       lost,
       pipelineValue: openDeals.reduce((sum, d) => sum + Number(d.value || 0), 0),
+      velocityDays: avgAgingDays(openDeals),
       upcoming: tasks
         .filter((t) => t.status !== 'done' && inView(t))
         .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))
         .slice(0, 6),
-      recentActivities: activities.filter(inView).slice(0, 6),
+      recentActivities: activities
+        .filter(inView)
+        .slice()
+        .sort((a, b) => activitySortValue(b) - activitySortValue(a))
+        .slice(0, 6),
       stageDeals: currencyDeals,
     }
   }, [activities, currency, deals, leads, tasks])
@@ -62,7 +69,7 @@ export default function Dashboard() {
       <div className="page-head">
         <div>
           <h1>Sales dashboard</h1>
-          <p>Leads, open deals, pipeline value, won/lost, and upcoming tasks</p>
+          <p>Leads, open opportunities, pipeline value, won/lost, and upcoming tasks</p>
         </div>
         <NewButton to="/leads">New lead</NewButton>
       </div>
@@ -83,11 +90,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid stats">
-        <Stat label="Leads" value={currencyLeads.length} />
-        <Stat label="Open deals" value={openDeals.length} />
-        <Stat label="Pipeline value" value={money(pipelineValue, currency)} />
-        <Stat label="Won" value={won.length} />
-        <Stat label="Lost" value={lost.length} />
+        <Stat label="Leads" value={currencyLeads.length} to="/leads" />
+        <Stat label="Open opportunities" value={openDeals.length} to="/pipeline" />
+        <Stat label="Pipeline value" value={money(pipelineValue, currency)} to="/pipeline" />
+        <Stat label="Velocity" value={`${velocityDays}d`} to="/pipeline" />
+        <Stat label="Won" value={won.length} to="/deals?filter=won" />
+        <Stat label="Lost" value={lost.length} to="/deals?filter=lost" />
       </div>
 
       <div className="grid two" style={{ marginTop: 16 }}>
@@ -115,14 +123,18 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="card">
-          <h3>Recent activities</h3>
+          <h3>
+            <Link className="section-link" to="/activities">
+              Recent activities
+            </Link>
+          </h3>
           {recentActivities.length === 0 && <Empty text="No activities yet" />}
           <div className="timeline">
             {recentActivities.map((item) => (
               <div className="timeline-item" key={item.id}>
                 <b>{item.title}</b>
                 <div className="muted">
-                  {item.relatedName} · {item.ownerName}
+                  {item.relatedName} · {item.ownerName} · {formatDate(item.activityDate || item.createdAt)}
                 </div>
               </div>
             ))}
@@ -130,7 +142,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <Link className="card pipeline-overview-card" to="/pipeline" style={{ marginTop: 16, display: 'block' }}>
         <h3>Pipeline overview</h3>
         <div className="grid three">
           {DEAL_STAGES.map((stage) => {
@@ -145,16 +157,16 @@ export default function Dashboard() {
             )
           })}
         </div>
-      </div>
+      </Link>
     </div>
   )
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, to }) {
   return (
-    <div className="card">
+    <Link className="card stat-link" to={to}>
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
-    </div>
+    </Link>
   )
 }

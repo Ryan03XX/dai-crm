@@ -89,3 +89,80 @@ export function formatPhone(record) {
   if (!number) return '—'
   return `${countryOf(record.phoneCountry).dial} ${number}`
 }
+
+export function toDate(value) {
+  if (!value) return null
+  const date = value.toDate ? value.toDate() : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function daysSince(value) {
+  const date = toDate(value)
+  if (!date) return 0
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000))
+}
+
+export function agingLabel(value) {
+  const days = daysSince(value)
+  if (days === 0) return 'Today'
+  if (days === 1) return '1 day'
+  return `${days} days`
+}
+
+export function currentSchedule() {
+  const now = new Date()
+  return `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getFullYear()).slice(-2)}`
+}
+
+export function todayInputDate() {
+  const now = new Date()
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 10)
+}
+
+export function opportunities(deals = []) {
+  return deals.filter((deal) => deal.isOpportunity !== false)
+}
+
+export function isOpenDeal(deal) {
+  return deal.stage !== 'won' && deal.stage !== 'lost'
+}
+
+export function activitySortValue(item) {
+  return toDate(item.activityDate || item.createdAt)?.getTime() || 0
+}
+
+export function suggestedLeadName({ company, country, category, schedule }) {
+  const companyPart = String(company || 'Company').replace(/\s+/g, '')
+  const countryPart = country || 'SG'
+  const scopePart = String(category || 'scope').replace(/\s+/g, '-')
+  const schedulePart = schedule || currentSchedule()
+  return `${companyPart}_${countryPart}_${scopePart}_${schedulePart}`
+}
+
+export function avgAgingDays(records) {
+  if (!records?.length) return 0
+  const total = records.reduce((sum, item) => sum + daysSince(item.createdAt), 0)
+  return Math.round(total / records.length)
+}
+
+export function trackerFrom(source = {}) {
+  return {
+    ncp: source.ncp || '',
+    endUser: source.endUser || source.companyName || source.company || '',
+    gpuModel: source.gpuModel || '',
+    gpuQty: source.gpuQty === '' || source.gpuQty == null ? '' : source.gpuQty,
+    oem: source.oem || '',
+    deliverySchedule: source.deliverySchedule || source.schedule || '',
+    dcVendor: source.dcVendor || '',
+    dcSite: source.dcSite || '',
+    capacityMw: source.capacityMw === '' || source.capacityMw == null ? '' : source.capacityMw,
+    comments: source.comments || '',
+  }
+}
+
+export function displayValue(value) {
+  if (value === 0) return '0'
+  if (value === '' || value == null) return '—'
+  return value
+}

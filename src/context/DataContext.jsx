@@ -12,17 +12,26 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { todayInputDate } from '../utils'
 import { useAuth } from './AuthContext'
 
 const COLLECTIONS = ['leads', 'companies', 'contacts', 'deals', 'activities', 'tasks', 'users']
 
 const DataContext = createContext(null)
 
-function sortByCreatedAt(rows) {
+function timeValue(value) {
+  if (!value) return 0
+  if (value.toMillis) return value.toMillis()
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
+function sortRows(name, rows) {
   return [...rows].sort((a, b) => {
-    const ta = a.createdAt?.toMillis?.() || 0
-    const tb = b.createdAt?.toMillis?.() || 0
-    return tb - ta
+    if (name === 'activities') {
+      return timeValue(b.activityDate || b.createdAt) - timeValue(a.activityDate || a.createdAt)
+    }
+    return timeValue(b.createdAt) - timeValue(a.createdAt)
   })
 }
 
@@ -46,7 +55,7 @@ export function DataProvider({ children }) {
       const col = collection(db, name)
       const q = name === 'users' || isAdmin ? query(col) : query(col, where('ownerId', '==', user.uid))
       return onSnapshot(q, (snap) => {
-        const rows = sortByCreatedAt(snap.docs.map((item) => ({ id: item.id, ...item.data() })))
+        const rows = sortRows(name, snap.docs.map((item) => ({ id: item.id, ...item.data() })))
         setData((prev) => ({ ...prev, [name]: rows }))
         setLoading(false)
       })
@@ -62,8 +71,17 @@ export function DataProvider({ children }) {
       ...data,
       loading,
       async create(colName, payload) {
+        const extra = {}
+        if (colName === 'activities' && !payload.activityDate) {
+          extra.activityDate = todayInputDate()
+        }
+        if (colName === 'deals') {
+          extra.isOpportunity = payload.isOpportunity !== false
+          if (!payload.stageEnteredAt) extra.stageEnteredAt = serverTimestamp()
+        }
         const ref = await addDoc(collection(db, colName), {
           ...payload,
+          ...extra,
           ownerId,
           ownerName,
           createdAt: serverTimestamp(),
@@ -117,16 +135,35 @@ export function DataProvider({ children }) {
           contactName: form.contactName,
           stage: 'qualification',
           expectedCloseDate: form.expectedCloseDate || '',
+          nextStep: form.nextStep || '',
+          probability: Number(form.probability || 0),
+          category: lead.category || '',
+          country: lead.country || lead.phoneCountry || 'SG',
+          schedule: lead.schedule || '',
+          ncp: form.ncp || '',
+          endUser: form.endUser || form.companyName || '',
+          gpuModel: form.gpuModel || '',
+          gpuQty: form.gpuQty === '' || form.gpuQty == null ? '' : Number(form.gpuQty),
+          oem: form.oem || '',
+          deliverySchedule: form.deliverySchedule || lead.schedule || '',
+          dcVendor: form.dcVendor || '',
+          dcSite: form.dcSite || '',
+          capacityMw: form.capacityMw === '' || form.capacityMw == null ? '' : Number(form.capacityMw),
+          comments: form.comments || '',
+          isOpportunity: true,
+          leadId: lead.id,
+          stageEnteredAt: stamp,
           ...owner,
           createdAt: stamp,
         })
         batch.set(activityRef, {
           type: 'note',
           title: `Lead converted: ${lead.name}`,
-          description: `Created company, contact and deal "${form.dealName}"`,
+          description: `Created company, contact and opportunity "${form.dealName}"`,
           relatedType: 'deal',
           relatedId: dealRef.id,
           relatedName: form.dealName,
+          activityDate: todayInputDate(),
           ...owner,
           createdAt: stamp,
         })
