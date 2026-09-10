@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { TASK_STATUSES, labelOf } from '../constants'
 import { formatDate, isOverdue } from '../utils'
@@ -6,6 +7,7 @@ import { Empty, Field, Modal, NewButton, Pill } from '../components/ui'
 
 export default function Tasks() {
   const { tasks, create, update } = useData()
+  const { canEdit } = useAuth()
   const [status, setStatus] = useState('open')
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ title: '', dueDate: '', status: 'open' })
@@ -58,17 +60,26 @@ export default function Tasks() {
                 <td>{formatDate(task.dueDate)}</td>
                 <td>{task.ownerName}</td>
                 <td>
-                  <button
-                    className="ghost"
-                    onClick={() => update('tasks', task.id, { status: task.status === 'done' ? 'open' : 'done' })}
-                  >
+                  {canEdit(task) ? (
+                    <button
+                      className="ghost"
+                      onClick={() => update('tasks', task.id, { status: task.status === 'done' ? 'open' : 'done' })}
+                    >
+                      <Pill
+                        value={isOverdue(task.dueDate, task.status) ? 'lost' : task.status}
+                        label={
+                          isOverdue(task.dueDate, task.status) ? 'Overdue' : labelOf(TASK_STATUSES, task.status)
+                        }
+                      />
+                    </button>
+                  ) : (
                     <Pill
                       value={isOverdue(task.dueDate, task.status) ? 'lost' : task.status}
                       label={
                         isOverdue(task.dueDate, task.status) ? 'Overdue' : labelOf(TASK_STATUSES, task.status)
                       }
                     />
-                  </button>
+                  )}
                 </td>
               </tr>
             ))}

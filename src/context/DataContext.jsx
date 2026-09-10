@@ -8,7 +8,6 @@ import {
   query,
   serverTimestamp,
   updateDoc,
-  where,
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -52,8 +51,7 @@ export function DataProvider({ children }) {
     if (!user) return undefined
     setLoading(true)
     const unsubs = COLLECTIONS.map((name) => {
-      const col = collection(db, name)
-      const q = name === 'users' || isAdmin ? query(col) : query(col, where('ownerId', '==', user.uid))
+      const q = query(collection(db, name))
       return onSnapshot(q, (snap) => {
         const rows = sortRows(name, snap.docs.map((item) => ({ id: item.id, ...item.data() })))
         setData((prev) => ({ ...prev, [name]: rows }))
@@ -61,7 +59,7 @@ export function DataProvider({ children }) {
       })
     })
     return () => unsubs.forEach((unsub) => unsub())
-  }, [user, isAdmin])
+  }, [user])
 
   const ownerId = user?.uid
   const ownerName = profile?.name || user?.displayName || user?.email || ''
@@ -89,12 +87,23 @@ export function DataProvider({ children }) {
         return ref.id
       },
       async update(colName, id, payload) {
+        const row = data[colName]?.find((item) => item.id === id)
+        if (row && !isAdmin && row.ownerId !== ownerId) {
+          throw new Error('You can only edit your own records')
+        }
         await updateDoc(doc(db, colName, id), payload)
       },
       async remove(colName, id) {
+        const row = data[colName]?.find((item) => item.id === id)
+        if (row && !isAdmin && row.ownerId !== ownerId) {
+          throw new Error('You can only delete your own records')
+        }
         await deleteDoc(doc(db, colName, id))
       },
       async convertLead(lead, form) {
+        if (!isAdmin && lead.ownerId !== ownerId) {
+          throw new Error('You can only convert your own leads')
+        }
         const batch = writeBatch(db)
         const companyRef = doc(collection(db, 'companies'))
         const contactRef = doc(collection(db, 'contacts'))
@@ -180,7 +189,7 @@ export function DataProvider({ children }) {
         return { companyId: companyRef.id, dealId: dealRef.id }
       },
     }),
-    [data, loading, ownerId, ownerName]
+    [data, loading, ownerId, ownerName, isAdmin]
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

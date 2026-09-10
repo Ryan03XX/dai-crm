@@ -14,7 +14,7 @@ service cloud.firestore {
       return signedIn() && data.ownerId == request.auth.uid;
     }
 
-    function crmAccess() {
+    function crmWrite() {
       return request.method == 'create'
         ? owned(request.resource.data)
         : (isAdmin() || owned(resource.data));
@@ -27,11 +27,29 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    match /leads/{id} { allow read, write: if crmAccess(); }
-    match /companies/{id} { allow read, write: if crmAccess(); }
-    match /contacts/{id} { allow read, write: if crmAccess(); }
-    match /deals/{id} { allow read, write: if crmAccess(); }
-    match /activities/{id} { allow read, write: if crmAccess(); }
-    match /tasks/{id} { allow read, write: if crmAccess(); }
+    match /leads/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
+    match /companies/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
+    match /contacts/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
+    match /deals/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
+    match /activities/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
+    match /tasks/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if crmWrite();
+    }
   }
 }

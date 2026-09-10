@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import {
   ACTIVITY_TYPES,
@@ -19,6 +20,7 @@ export default function LeadDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { leads, activities, tasks, update, create, convertLead } = useData()
+  const { canEdit } = useAuth()
   const lead = leads.find((item) => item.id === id)
   const [convertOpen, setConvertOpen] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
@@ -81,8 +83,10 @@ export default function LeadDetail() {
   })
 
   if (!lead) return <p>Lead not found or still loading...</p>
+  const editable = canEdit(lead)
 
   async function save() {
+    if (!editable) return
     await update('leads', lead.id, form)
   }
 
@@ -93,7 +97,7 @@ export default function LeadDetail() {
       relatedId: lead.id,
       relatedName: lead.name,
     })
-    if (lead.status === 'new') {
+    if (editable && lead.status === 'new') {
       await update('leads', lead.id, { status: 'contacted' })
     }
   }
@@ -109,6 +113,7 @@ export default function LeadDetail() {
 
   async function handleConvert(e) {
     e.preventDefault()
+    if (!editable) return
     if (!confirmed) {
       alert('Please confirm this lead should become an opportunity.')
       return
@@ -141,6 +146,7 @@ export default function LeadDetail() {
           <h1>{lead.name}</h1>
           <p>
             {lead.company || 'No company yet'} · {lead.ownerName} · Aging {agingLabel(lead.createdAt)}
+            {!editable ? ' · View only' : ''}
           </p>
           <div className="flow">
             <span>New lead</span>
@@ -151,7 +157,7 @@ export default function LeadDetail() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {lead.status !== 'converted' && (
+          {editable && lead.status !== 'converted' && (
             <button className="btn gold" onClick={() => {
               setDealCurrency('')
               setDealAmount('')
@@ -163,9 +169,11 @@ export default function LeadDetail() {
               Convert to Opportunity
             </button>
           )}
-          <button className="btn" onClick={save}>
-            Save
-          </button>
+          {editable && (
+            <button className="btn" onClick={save}>
+              Save
+            </button>
+          )}
         </div>
       </div>
 
@@ -181,6 +189,7 @@ export default function LeadDetail() {
       <div className="grid two">
         <div className="card">
           <h3>Lead details</h3>
+          <fieldset className="edit-scope" disabled={!editable}>
           <div className="form-grid">
             <div>
               <Field label="Name" hint={NAME_HINT}>
@@ -257,6 +266,7 @@ export default function LeadDetail() {
             <Pill value={lead.status} label={labelOf(LEAD_STATUSES, lead.status)} />
             <Pill value={form.category} label={labelOf(LEAD_CATEGORIES, form.category)} />
           </div>
+          </fieldset>
         </div>
 
         <div className="card">

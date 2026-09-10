@@ -82,6 +82,11 @@ export function AuthProvider({ children }) {
       loading,
       isAdmin: profile?.role === 'admin' && profile?.status !== 'inactive',
       isActive: profile?.status !== 'inactive',
+      canEdit(record) {
+        if (!record || profile?.status === 'inactive') return false
+        if (profile?.role === 'admin') return true
+        return record.ownerId === user?.uid
+      },
       async signIn(email, password, remember = true) {
         await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
         const cred = await signInWithEmailAndPassword(auth, email, password)

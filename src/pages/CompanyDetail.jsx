@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, labelOf } from '../constants'
 import { Field, PhoneField, PhoneText, Pill } from '../components/ui'
@@ -9,6 +10,7 @@ import { QuickActivity, QuickTask } from '../components/FollowUp'
 export default function CompanyDetail() {
   const { id } = useParams()
   const { companies, contacts, deals, update, create } = useData()
+  const { canEdit } = useAuth()
   const company = companies.find((item) => item.id === id)
   const [form, setForm] = useState({
     name: '',
@@ -36,8 +38,10 @@ export default function CompanyDetail() {
   }, [company?.id])
 
   if (!company) return <p>Company not found or still loading...</p>
+  const editable = canEdit(company)
 
   async function save() {
+    if (!editable) return
     await update('companies', company.id, form)
   }
 
@@ -48,16 +52,20 @@ export default function CompanyDetail() {
           <h1>{company.name}</h1>
           <p>
             Company profile · {people.length} contacts · {companyDeals.length} opportunities
+            {!editable ? ' · View only' : ''}
           </p>
         </div>
-        <button className="btn" onClick={save}>
-          Save
-        </button>
+        {editable && (
+          <button className="btn" onClick={save}>
+            Save
+          </button>
+        )}
       </div>
 
       <div className="grid two">
         <div className="card">
           <h3>Company details</h3>
+          <fieldset className="edit-scope" disabled={!editable}>
           <div className="form-grid">
             <Field label="Company name">
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -81,6 +89,7 @@ export default function CompanyDetail() {
               <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
             </Field>
           </div>
+          </fieldset>
         </div>
         <div className="card">
           <h3>Follow-up</h3>

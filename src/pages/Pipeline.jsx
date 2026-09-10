@@ -1,23 +1,29 @@
-import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, LEAD_CATEGORIES, labelOf } from '../constants'
 import { agingLabel, avgAgingDays, isOpenDeal, moneyOf, opportunities, totalsByCurrency } from '../utils'
 import { Pill } from '../components/ui'
+import { OpportunityModal } from '../components/OpportunityDetail'
 
 export default function Pipeline() {
   const { deals, update } = useData()
-  const navigate = useNavigate()
+  const { canEdit } = useAuth()
+  const [selectedId, setSelectedId] = useState(null)
+  const dragging = useRef(false)
   const opps = useMemo(() => opportunities(deals), [deals])
   const openOpps = useMemo(() => opps.filter(isOpenDeal), [opps])
   const size = openOpps.length
   const velocity = avgAgingDays(openOpps)
   const pipelineValue = totalsByCurrency(openOpps)
+  const selected = deals.find((item) => item.id === selectedId)
 
   function onDrop(stage, event) {
     event.preventDefault()
     const id = event.dataTransfer.getData('text/plain')
-    if (id) update('deals', id, { stage, stageEnteredAt: new Date().toISOString() })
+    const deal = deals.find((item) => item.id === id)
+    if (!id || !canEdit(deal)) return
+    update('deals', id, { stage, stageEnteredAt: new Date().toISOString() })
   }
 
   const shapeTotal = openOpps.length || 1
@@ -27,7 +33,7 @@ export default function Pipeline() {
       <div className="page-head">
         <div>
           <h1>Pipeline</h1>
-          <p>Confirmed opportunities only. Drag cards to update the stage until Won or Lost.</p>
+          <p>Confirmed opportunities only. Drag your own cards to update the stage, or click a card to open it.</p>
         </div>
       </div>
 
@@ -88,13 +94,29 @@ export default function Pipeline() {
                 <span>{rows.length}</span>
               </header>
               <div className="kanban-money">{rows.length ? totalsByCurrency(rows) : '—'}</div>
+              <div
+                className="kanban-drop"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => onDrop(stage.id, e)}
+              >
               {rows.map((deal) => (
                 <article
                   key={deal.id}
-                  className="deal-card"
-                  draggable
-                  onDragStart={(e) => e.dataTransfer.setData('text/plain', deal.id)}
-                  onClick={() => navigate(`/deals?id=${deal.id}`)}
+                  className={`deal-card ${canEdit(deal) ? '' : 'readonly-card'}`}
+                  draggable={canEdit(deal)}
+                  onDragStart={(e) => {
+                    dragging.current = true
+                    e.dataTransfer.setData('text/plain', deal.id)
+                  }}
+                  onDragEnd={() => {
+                    window.setTimeout(() => {
+                      dragging.current = false
+                    }, 0)
+                  }}
+                  onClick={() => {
+                    if (dragging.current) return
+                    setSelectedId(deal.id)
+                  }}
                 >
                   <b>{deal.name}</b>
                   <div className="meta">{deal.endUser || deal.companyName}</div>
@@ -116,10 +138,12 @@ export default function Pipeline() {
                   </div>
                 </article>
               ))}
+              </div>
             </section>
           )
         })}
       </div>
+      <OpportunityModal deal={selected} onClose={() => setSelectedId(null)} />
     </div>
   )
 }

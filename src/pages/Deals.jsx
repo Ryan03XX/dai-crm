@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, LEAD_CATEGORIES, NAME_HINT, TRACKER_EMPTY, TRACKER_GROUPS, labelOf } from '../constants'
 import { CountryField, Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
 import { AttachmentPicker } from '../components/AttachmentPicker'
+import { OpportunityModal } from '../components/OpportunityDetail'
 import { deleteAttachmentFile, persistAttachments, revokeLocalUrl } from '../attachments'
-import { activitySortValue, agingLabel, countryPayload, currentSchedule, displayValue, formatDate, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
-import { QuickActivity, QuickTask } from '../components/FollowUp'
+import { agingLabel, countryPayload, currentSchedule, displayValue, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
 
 const emptyDeal = {
   name: '',
@@ -72,7 +73,8 @@ function formFromDeal(deal) {
 }
 
 export default function Deals() {
-  const { deals, companies, contacts, activities, create, update, remove } = useData()
+  const { deals, companies, contacts, create, update, remove } = useData()
+  const { canEdit } = useAuth()
   const [params, setParams] = useSearchParams()
   const selectedId = params.get('id')
   const stageFilter = params.get('filter')
@@ -89,14 +91,6 @@ export default function Deals() {
     }
     return rows
   }, [deals, stageFilter])
-  const related = useMemo(
-    () =>
-      activities
-        .filter((item) => item.relatedType === 'deal' && item.relatedId === selectedId)
-        .slice()
-        .sort((a, b) => activitySortValue(b) - activitySortValue(a)),
-    [activities, selectedId]
-  )
 
   const isAdd = modal === 'add'
 
@@ -116,6 +110,7 @@ export default function Deals() {
   }
 
   function openEdit(deal) {
+    if (!canEdit(deal)) return
     setError('')
     setForm(formFromDeal(deal))
     setFiles(deal.attachments || [])
@@ -159,6 +154,7 @@ export default function Deals() {
         if (attachments.length) await update('deals', id, { attachments })
         setParams({ id })
       } else {
+        if (!canEdit(modal)) throw new Error('You can only edit your own records')
         const attachments = await persistAttachments(modal.id, files, modal.attachments || [])
         await update('deals', modal.id, { ...fields, attachments })
         setParams({ id: modal.id, ...(stageFilter ? { filter: stageFilter } : {}) })
@@ -171,12 +167,8 @@ export default function Deals() {
     }
   }
 
-  async function saveSelected(payload) {
-    if (!selected) return
-    await update('deals', selected.id, payload)
-  }
-
   async function deleteDeal(deal) {
+    if (!canEdit(deal)) return
     if (!confirm(`Delete opportunity "${deal.name}"? This cannot be undone.`)) return
     await Promise.all((deal.attachments || []).map((item) => deleteAttachmentFile(item)))
     await remove('deals', deal.id)
@@ -188,7 +180,7 @@ export default function Deals() {
       <div className="page-head">
         <div>
           <h1>Opportunities</h1>
-          <p>Tracker view matching project, data center and project management fields</p>
+          <p>All opportunities are visible. Sales can edit and attach files on their own records only.</p>
         </div>
         <NewButton onClick={openAdd}>New opportunity</NewButton>
       </div>
@@ -236,12 +228,18 @@ export default function Deals() {
                 )}
                 <td>
                   <div className="user-actions" onClick={(e) => e.stopPropagation()}>
-                    <button type="button" className="btn light btn-small" onClick={() => openEdit(deal)}>
-                      Edit
-                    </button>
-                    <button type="button" className="btn light btn-small" onClick={() => deleteDeal(deal)}>
-                      Delete
-                    </button>
+                    {canEdit(deal) ? (
+                      <>
+                        <button type="button" className="btn light btn-small" onClick={() => openEdit(deal)}>
+                          Edit
+                        </button>
+                        <button type="button" className="btn light btn-small" onClick={() => deleteDeal(deal)}>
+                          Delete
+                        </button>
+                      </>
+                    ) : (
+                      <span className="muted">View only</span>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -250,114 +248,10 @@ export default function Deals() {
         </table>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        {selected ? (
-          <>
-            <h3>{selected.name}</h3>
-            <p className="muted">
-              {selected.endUser || selected.companyName} · {selected.contactName} · {moneyOf(selected)} · Aging {agingLabel(selected.createdAt)}
-            </p>
-            <div className="form-grid">
-              <Field label="Stage">
-                <select
-                  value={selected.stage}
-                  onChange={(e) => saveSelected({ stage: e.target.value, stageEnteredAt: new Date().toISOString() })}
-                >
-                  {DEAL_STAGES.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Next step">
-                <input
-                  defaultValue={selected.nextStep || ''}
-                  key={`${selected.id}-next`}
-                  onBlur={(e) => saveSelected({ nextStep: e.target.value })}
-                />
-              </Field>
-              <Field label="Probability %">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  defaultValue={selected.probability || ''}
-                  key={`${selected.id}-prob`}
-                  onBlur={(e) => saveSelected({ probability: Number(e.target.value || 0) })}
-                />
-              </Field>
-              <Field label="Expected close">
-                <input
-                  type="date"
-                  defaultValue={selected.expectedCloseDate || ''}
-                  key={`${selected.id}-close`}
-                  onBlur={(e) => saveSelected({ expectedCloseDate: e.target.value })}
-                />
-              </Field>
-              <CountryField
-                country={selected.countryTbc ? '' : selected.country || ''}
-                tbc={Boolean(selected.countryTbc)}
-                onCountryChange={(country) => saveSelected(countryPayload(country, false))}
-                onTbcChange={(countryTbc) => saveSelected(countryPayload(selected.country, countryTbc))}
-              />
-              <MoneyField
-                currency={selected.currency || ''}
-                amount={selected.value ?? ''}
-                required={!selected.countryTbc}
-                onCurrencyChange={(currency) => saveSelected({ currency })}
-                onAmountChange={(value) => saveSelected(valuePayload(value))}
-              />
-            </div>
-            <TrackerFields
-              key={selected.id}
-              values={selected}
-              onCommit={(key, value) => saveSelected({ [key]: commitTracker(key, value) })}
-            />
-            <AttachmentPicker
-              files={selected.attachments || []}
-              onChange={async (next) => {
-                const attachments = await persistAttachments(selected.id, next, selected.attachments || [])
-                await update('deals', selected.id, { attachments })
-              }}
-            />
-            <div style={{ marginTop: 16 }}>
-              <QuickActivity
-                onSubmit={(payload) =>
-                  create('activities', {
-                    ...payload,
-                    relatedType: 'deal',
-                    relatedId: selected.id,
-                    relatedName: selected.name,
-                  })
-                }
-              />
-              <QuickTask
-                defaultTitle={`Follow up ${selected.name}`}
-                onSubmit={(payload) =>
-                  create('tasks', {
-                    ...payload,
-                    relatedType: 'deal',
-                    relatedId: selected.id,
-                    relatedName: selected.name,
-                  })
-                }
-              />
-            </div>
-            <div className="timeline">
-              {related.map((item) => (
-                <div className="timeline-item" key={item.id}>
-                  <b>{item.title}</b>
-                  <div className="muted">{item.description}</div>
-                  <div className="muted">{formatDate(item.activityDate || item.createdAt)}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="muted">Select an opportunity to edit tracker details, or drag stages on the pipeline.</p>
-        )}
-      </div>
+      <OpportunityModal
+        deal={!modal ? selected : null}
+        onClose={() => setParams(stageFilter ? { filter: stageFilter } : {})}
+      />
 
       {modal && (
         <Modal title={isAdd ? 'New opportunity' : 'Edit opportunity'} onClose={closeModal}>

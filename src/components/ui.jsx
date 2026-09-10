@@ -4,10 +4,10 @@ import { COUNTRY_CODES, CURRENCIES, DEFAULT_PHONE_COUNTRY } from '../constants'
 import { countryOf } from '../utils'
 import { ICONS } from './icons'
 
-export function Modal({ title, children, onClose }) {
+export function Modal({ title, children, onClose, wide = false }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${wide ? 'wide' : ''}`} onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {children}
       </div>

@@ -1,15 +1,30 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /opportunities/{dealId}/{fileName} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.resource.size < 10 * 1024 * 1024;
-      allow delete: if request.auth != null;
+    function signedIn() {
+      return request.auth != null;
     }
+
+    function isAdmin() {
+      return signedIn() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function ownsDeal(dealId) {
+      return signedIn() &&
+        firestore.get(/databases/(default)/documents/deals/$(dealId)).data.ownerId == request.auth.uid;
+    }
+
+    match /opportunities/{dealId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.size < 10 * 1024 * 1024
+        && (isAdmin() || ownsDeal(dealId));
+      allow delete: if isAdmin() || ownsDeal(dealId);
+    }
+
     match /{allPaths=**} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.resource.size < 10 * 1024 * 1024;
-      allow delete: if request.auth != null;
+      allow read: if signedIn();
     }
   }
 }
