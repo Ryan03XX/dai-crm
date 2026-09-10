@@ -1,17 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
+import { Field, Modal, NewButton } from '../components/ui'
 
 const ROLES = [
   { id: 'admin', label: 'Admin' },
   { id: 'sales', label: 'Sales' },
 ]
 
+const emptyUser = { name: '', email: '', password: '', role: 'sales' }
+
 export default function Users() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, createUser } = useAuth()
   const { users, update } = useData()
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState(emptyUser)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   if (!isAdmin) return <p>Only Admin can manage users.</p>
+
+  async function save(e) {
+    e.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      await createUser(form)
+      setOpen(false)
+      setForm(emptyUser)
+    } catch (err) {
+      const messages = {
+        'auth/email-already-in-use': 'This email is already registered',
+        'auth/invalid-email': 'Please enter a valid email',
+        'auth/weak-password': 'Password must be at least 6 characters',
+      }
+      setError(messages[err.code] || err.message || 'Unable to add this user')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div>
@@ -20,6 +47,13 @@ export default function Users() {
           <h1>Users</h1>
           <p>Sales can manage their own customers. Admin can see everyone.</p>
         </div>
+        <NewButton onClick={() => {
+          setError('')
+          setForm(emptyUser)
+          setOpen(true)
+        }}>
+          Add user
+        </NewButton>
       </div>
       <div className="card table-wrap users-table">
         <table>
@@ -43,6 +77,51 @@ export default function Users() {
           </tbody>
         </table>
       </div>
+
+      {open && (
+        <Modal title="Add user" onClose={() => setOpen(false)}>
+          <p className="muted">Create a login for a teammate. Share the email and password with them after saving.</p>
+          <form onSubmit={save}>
+            <div className="form-grid">
+              <Field label="Full name">
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required autoComplete="off" />
+              </Field>
+              <Field label="Email">
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required autoComplete="off" />
+              </Field>
+              <Field label="Temporary password">
+                <input
+                  type="text"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  placeholder="At least 6 characters"
+                />
+              </Field>
+              <Field label="Role">
+                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                  {ROLES.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
+            <div className="modal-actions">
+              <button type="button" className="btn light" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn" disabled={busy}>
+                {busy ? 'Adding...' : 'Add user'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }

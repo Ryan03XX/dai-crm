@@ -1,8 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { getApps, initializeApp } from 'firebase/app'
 import {
   browserLocalPersistence,
   browserSessionPersistence,
   createUserWithEmailAndPassword,
+  getAuth,
+  inMemoryPersistence,
   onAuthStateChanged,
   setPersistence,
   signInWithEmailAndPassword,
@@ -13,13 +16,23 @@ import {
   collection,
   doc,
   getDocs,
+  getFirestore,
   onSnapshot,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore'
-import { auth, db, isFirebaseConfigured } from '../firebase'
+import { auth, db, firebaseConfig, isFirebaseConfigured } from '../firebase'
 
 const AuthContext = createContext(null)
+
+function secondaryServices() {
+  const name = 'Secondary'
+  const secondaryApp = getApps().find((item) => item.name === name) || initializeApp(firebaseConfig, name)
+  return {
+    auth: getAuth(secondaryApp),
+    db: getFirestore(secondaryApp),
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -81,6 +94,23 @@ export function AuthProvider({ children }) {
       },
       async signOut() {
         await firebaseSignOut(auth)
+      },
+      async createUser({ name, email, password, role = 'sales' }) {
+        const secondary = secondaryServices()
+        await setPersistence(secondary.auth, inMemoryPersistence)
+        try {
+          const cred = await createUserWithEmailAndPassword(secondary.auth, email, password)
+          await updateProfile(cred.user, { displayName: name })
+          await setDoc(doc(secondary.db, 'users', cred.user.uid), {
+            name,
+            email,
+            role: role === 'admin' ? 'admin' : 'sales',
+            createdAt: serverTimestamp(),
+          })
+          return cred.user.uid
+        } finally {
+          await firebaseSignOut(secondary.auth)
+        }
       },
     }),
     [user, profile, loading]
