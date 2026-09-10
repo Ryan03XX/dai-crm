@@ -7,9 +7,7 @@ import { DaiLogo } from '../components/ui'
 const REMEMBER_EMAIL_KEY = 'dai-crm-remember-email'
 
 export default function Login() {
-  const { user, signIn, signUp } = useAuth()
-  const [mode, setMode] = useState('login')
-  const [name, setName] = useState('')
+  const { user, signIn } = useAuth()
   const [email, setEmail] = useState(() => localStorage.getItem(REMEMBER_EMAIL_KEY) || '')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -24,28 +22,21 @@ export default function Login() {
     setError('')
     setBusy(true)
     try {
-      if (mode === 'login') {
-        if (remember) localStorage.setItem(REMEMBER_EMAIL_KEY, email)
-        else localStorage.removeItem(REMEMBER_EMAIL_KEY)
-        await signIn(email, password, remember)
-      } else {
-        await signUp(name, email, password)
-      }
+      if (remember) localStorage.setItem(REMEMBER_EMAIL_KEY, email)
+      else localStorage.removeItem(REMEMBER_EMAIL_KEY)
+      await signIn(email, password, remember)
     } catch (err) {
       const messages = {
         'auth/invalid-credential': 'Incorrect email or password',
         'auth/invalid-email': 'Please enter a valid email',
-        'auth/email-already-in-use': 'This email is already registered',
-        'auth/weak-password': 'Password must be at least 6 characters',
         'auth/user-inactive': 'This account is inactive. Contact an admin.',
+        'auth/operation-not-allowed': 'Email/Password sign-in is not enabled in Firebase',
       }
       setError(messages[err.code] || err.message || 'Unable to sign in')
     } finally {
       setBusy(false)
     }
   }
-
-  const isLogin = mode === 'login'
 
   return (
     <div className="auth-page">
@@ -55,15 +46,9 @@ export default function Login() {
           <p>Track leads, opportunities and pipeline in one workspace.</p>
         </aside>
         <div className="auth-card">
-          <h1>{isLogin ? 'Welcome back' : 'Create account'}</h1>
-          <p>{isLogin ? 'Sign in to continue' : 'Set up your DAI CRM account'}</p>
+          <h1>Welcome back</h1>
+          <p>Sign in to continue</p>
           <form onSubmit={handleSubmit}>
-            {mode === 'register' && (
-              <label className="field">
-                <span>Full name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
-              </label>
-            )}
             <label className="field">
               <span>Email</span>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
@@ -75,26 +60,18 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                autoComplete="current-password"
               />
             </label>
-            {isLogin && (
-              <label className="remember-me">
-                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-                Remember me
-              </label>
-            )}
+            <label className="remember-me">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              Remember me
+            </label>
             {error && <div className="error">{error}</div>}
             <button className="btn auth-submit" disabled={busy}>
-              {busy ? 'Please wait...' : isLogin ? 'Sign in' : 'Create account'}
+              {busy ? 'Please wait...' : 'Sign in'}
             </button>
           </form>
-          <p className="auth-switch">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <button className="linkish" onClick={() => setMode(isLogin ? 'register' : 'login')}>
-              {isLogin ? 'Register' : 'Sign in'}
-            </button>
-          </p>
         </div>
       </div>
     </div>
