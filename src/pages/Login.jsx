@@ -37,7 +37,7 @@ export default function Login() {
         'auth/invalid-email': 'Please enter a valid email',
         'auth/email-already-in-use': 'This email is already registered',
         'auth/weak-password': 'Password must be at least 6 characters',
-        'auth/operation-not-allowed': 'Email/Password sign-in is not enabled in Firebase',
+        'auth/user-inactive': 'This account is inactive. Contact an admin.',
       }
       setError(messages[err.code] || err.message || 'Unable to sign in')
     } finally {

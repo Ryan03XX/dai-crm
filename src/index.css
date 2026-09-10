@@ -312,6 +312,15 @@ tr.clickable.selected { background: var(--accent-soft); }
 .pill.converted, .pill.won, .pill.done { background: #d9f7e4; color: #157347; }
 .pill.unqualified, .pill.lost { background: #fde8e6; color: #9b1c1c; }
 .pill.admin { background: var(--accent-soft); color: #1f5138; }
+.pill.active { background: #d9f7e4; color: #157347; }
+.pill.inactive { background: #eee8da; color: #6f675c; }
+.user-actions { display: flex; gap: 8px; align-items: center; }
+.btn-small {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+tr.inactive-row td { color: var(--muted); }
 .pill.sales { background: #e8f0ff; color: #274690; }
 
 .users-table { overflow: visible; }
@@ -380,6 +389,10 @@ tr.clickable.selected { background: var(--accent-soft); }
   border-radius: 10px;
   padding: 10px 12px;
   width: 100%;
+}
+.field input:disabled, .field select:disabled {
+  background: #f4efe3;
+  color: var(--muted);
 }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field > span,

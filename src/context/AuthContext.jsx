@@ -15,6 +15,7 @@ import {
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   getFirestore,
   onSnapshot,
@@ -58,8 +59,12 @@ export function AuthProvider({ children }) {
 
     const unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
       if (snap.exists()) {
-        setProfile({ id: snap.id, ...snap.data() })
+        const nextProfile = { id: snap.id, ...snap.data() }
+        setProfile(nextProfile)
         setLoading(false)
+        if (nextProfile.status === 'inactive') {
+          firebaseSignOut(auth)
+        }
       }
     })
 
@@ -75,10 +80,18 @@ export function AuthProvider({ children }) {
       user,
       profile,
       loading,
-      isAdmin: profile?.role === 'admin',
+      isAdmin: profile?.role === 'admin' && profile?.status !== 'inactive',
+      isActive: profile?.status !== 'inactive',
       async signIn(email, password, remember = true) {
         await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
-        await signInWithEmailAndPassword(auth, email, password)
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+        const snap = await getDoc(doc(db, 'users', cred.user.uid))
+        if (snap.data()?.status === 'inactive') {
+          await firebaseSignOut(auth)
+          const err = new Error('This account is inactive. Contact an admin.')
+          err.code = 'auth/user-inactive'
+          throw err
+        }
       },
       async signUp(name, email, password) {
         const cred = await createUserWithEmailAndPassword(auth, email, password)
@@ -89,6 +102,7 @@ export function AuthProvider({ children }) {
           name,
           email,
           role,
+          status: 'active',
           createdAt: serverTimestamp(),
         })
       },
@@ -105,6 +119,7 @@ export function AuthProvider({ children }) {
             name,
             email,
             role: role === 'admin' ? 'admin' : 'sales',
+            status: 'active',
             createdAt: serverTimestamp(),
           })
           return cred.user.uid
