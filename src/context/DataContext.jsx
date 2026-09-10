@@ -127,7 +127,8 @@ export function DataProvider({ children }) {
         })
         batch.set(dealRef, {
           name: form.dealName,
-          value: Number(form.value || 0),
+          value: form.value === '' || form.value == null ? null : Number(form.value),
+          currency: form.currency || '',
           currency: form.currency,
           companyId: companyRef.id,
           companyName: form.companyName,
@@ -138,7 +139,8 @@ export function DataProvider({ children }) {
           nextStep: form.nextStep || '',
           probability: Number(form.probability || 0),
           category: lead.category || '',
-          country: lead.country || lead.phoneCountry || 'SG',
+          country: form.countryTbc ? 'TBC' : form.country || lead.country || lead.phoneCountry || 'SG',
+          countryTbc: Boolean(form.countryTbc),
           schedule: lead.schedule || '',
           ncp: form.ncp || '',
           endUser: form.endUser || form.companyName || '',

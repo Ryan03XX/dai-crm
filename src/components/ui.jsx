@@ -79,7 +79,7 @@ export function MoneyField({ currency, amount, onCurrencyChange, onAmountChange,
           onChange={(e) => onCurrencyChange(e.target.value)}
           required={required}
         >
-          <option value="">Select currency</option>
+          <option value="">{required ? 'Select currency' : 'Optional'}</option>
           {CURRENCIES.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
@@ -97,9 +97,39 @@ export function MoneyField({ currency, amount, onCurrencyChange, onAmountChange,
           onChange={(e) => onAmountChange(e.target.value)}
           disabled={!currency}
           required={required && Boolean(currency)}
-          placeholder={currency ? '0.00' : 'Select currency first'}
+          placeholder={currency ? '0.00' : required ? 'Select currency first' : 'Optional'}
         />
       </Field>
+    </div>
+  )
+}
+
+export function CountryField({ country, tbc = false, onCountryChange, onTbcChange, required = true }) {
+  return (
+    <div className="country-field">
+      <Field label="Country">
+        <select
+          name="country"
+          value={tbc ? '' : country}
+          onChange={(e) => onCountryChange(e.target.value)}
+          disabled={tbc}
+          required={required && !tbc}
+        >
+          <option value="">{tbc ? 'TBC' : 'Select country'}</option>
+          {COUNTRY_CODES.map((item) => (
+            <option key={item.iso} value={item.iso}>
+              {item.iso} · {item.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <div className="field tbc-field">
+        <span className="field-label">&nbsp;</span>
+        <label className="tbc-check">
+          <input type="checkbox" checked={tbc} onChange={(e) => onTbcChange(e.target.checked)} />
+          TBC
+        </label>
+      </div>
     </div>
   )
 }

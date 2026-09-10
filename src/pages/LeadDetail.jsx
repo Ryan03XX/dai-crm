@@ -10,7 +10,7 @@ import {
   NAME_HINT,
   labelOf,
 } from '../constants'
-import { Field, Modal, MoneyField, PhoneField, Pill } from '../components/ui'
+import { CountryField, Field, Modal, MoneyField, PhoneField, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 import { activitySortValue, agingLabel, currentSchedule, formatDate, formatDateTime, suggestedLeadName } from '../utils'
@@ -25,6 +25,8 @@ export default function LeadDetail() {
   const [busy, setBusy] = useState(false)
   const [dealCurrency, setDealCurrency] = useState('')
   const [dealAmount, setDealAmount] = useState('')
+  const [dealCountry, setDealCountry] = useState('SG')
+  const [countryTbc, setCountryTbc] = useState(false)
   const [form, setForm] = useState({
     name: '',
     company: '',
@@ -116,10 +118,13 @@ export default function LeadDetail() {
       const data = Object.fromEntries(new FormData(e.target))
       data.currency = dealCurrency
       data.value = dealAmount
+      data.country = dealCountry
+      data.countryTbc = countryTbc
       await update('leads', lead.id, form)
       await convertLead({ ...lead, ...form }, data)
       setDealCurrency('')
       setDealAmount('')
+      setCountryTbc(false)
       setConfirmed(false)
       navigate('/pipeline')
     } catch (err) {
@@ -150,6 +155,8 @@ export default function LeadDetail() {
             <button className="btn gold" onClick={() => {
               setDealCurrency('')
               setDealAmount('')
+              setDealCountry(lead.country || lead.phoneCountry || 'SG')
+              setCountryTbc(false)
               setConfirmed(false)
               setConvertOpen(true)
             }}>
@@ -295,9 +302,19 @@ export default function LeadDetail() {
               <Field label="Project / opportunity name">
                 <input name="dealName" defaultValue={lead.name || `${lead.company || lead.name} opportunity`} required />
               </Field>
+              <CountryField
+                country={dealCountry}
+                tbc={countryTbc}
+                onCountryChange={(country) => {
+                  setDealCountry(country)
+                  setCountryTbc(false)
+                }}
+                onTbcChange={setCountryTbc}
+              />
               <MoneyField
                 currency={dealCurrency}
                 amount={dealAmount}
+                required={!countryTbc}
                 onCurrencyChange={setDealCurrency}
                 onAmountChange={setDealAmount}
               />

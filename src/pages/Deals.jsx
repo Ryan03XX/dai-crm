@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { COUNTRY_CODES, DEAL_STAGES, LEAD_CATEGORIES, NAME_HINT, TRACKER_EMPTY, TRACKER_GROUPS, labelOf } from '../constants'
-import { Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
+import { DEAL_STAGES, LEAD_CATEGORIES, NAME_HINT, TRACKER_EMPTY, TRACKER_GROUPS, labelOf } from '../constants'
+import { CountryField, Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
-import { activitySortValue, agingLabel, currentSchedule, displayValue, formatDate, moneyOf, opportunities, trackerFrom } from '../utils'
+import { activitySortValue, agingLabel, countryPayload, currentSchedule, displayValue, formatDate, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 
 const emptyDeal = {
   name: '',
   currency: '',
   value: '',
+  countryTbc: false,
   companyId: '',
   contactId: '',
   stage: 'qualification',
@@ -25,6 +26,7 @@ const emptyDeal = {
 
 function trackerValue(deal, key) {
   if (key === 'endUser') return displayValue(deal.endUser || deal.companyName)
+  if (key === 'country') return deal.countryTbc ? 'TBC' : displayValue(deal.country)
   if (key === 'stage') return <Pill value={deal.stage} label={labelOf(DEAL_STAGES, deal.stage)} />
   if (key === 'value') return moneyOf(deal)
   if (key === 'aging') return agingLabel(deal.createdAt)
@@ -72,7 +74,8 @@ export default function Deals() {
       gpuQty: commitTracker('gpuQty', form.gpuQty),
       capacityMw: commitTracker('capacityMw', form.capacityMw),
       currency: form.currency,
-      value: Number(form.value || 0),
+      ...valuePayload(form.value),
+      ...countryPayload(form.country, form.countryTbc),
       probability: Number(form.probability || 0),
       companyName: company?.name || '',
       contactName: contact?.name || '',
@@ -188,6 +191,19 @@ export default function Deals() {
                   onBlur={(e) => saveSelected({ expectedCloseDate: e.target.value })}
                 />
               </Field>
+              <CountryField
+                country={selected.countryTbc ? '' : selected.country || ''}
+                tbc={Boolean(selected.countryTbc)}
+                onCountryChange={(country) => saveSelected(countryPayload(country, false))}
+                onTbcChange={(countryTbc) => saveSelected(countryPayload(selected.country, countryTbc))}
+              />
+              <MoneyField
+                currency={selected.currency || ''}
+                amount={selected.value ?? ''}
+                required={!selected.countryTbc}
+                onCurrencyChange={(currency) => saveSelected({ currency })}
+                onAmountChange={(value) => saveSelected(valuePayload(value))}
+              />
             </div>
             <TrackerFields
               key={selected.id}
@@ -286,18 +302,16 @@ export default function Deals() {
                   ))}
                 </select>
               </Field>
-              <Field label="Country">
-                <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
-                  {COUNTRY_CODES.map((item) => (
-                    <option key={item.iso} value={item.iso}>
-                      {item.iso} · {item.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <CountryField
+                country={form.country}
+                tbc={form.countryTbc}
+                onCountryChange={(country) => setForm({ ...form, country, countryTbc: false })}
+                onTbcChange={(countryTbc) => setForm({ ...form, countryTbc })}
+              />
               <MoneyField
                 currency={form.currency}
                 amount={form.value}
+                required={!form.countryTbc}
                 onCurrencyChange={(currency) => setForm({ ...form, currency })}
                 onAmountChange={(value) => setForm({ ...form, value })}
               />

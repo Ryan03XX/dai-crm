@@ -456,6 +456,30 @@ tr.inactive-row td { color: var(--muted); }
   gap: 12px;
   grid-column: 1 / -1;
 }
+.country-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+.tbc-field { width: auto; }
+.tbc-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  font-size: 14px;
+  color: var(--muted);
+  user-select: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tbc-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 
 .flag {
   width: 20px;

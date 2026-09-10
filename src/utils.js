@@ -18,15 +18,33 @@ export function money(value, currency = 'SGD') {
 
 export function moneyOf(deal) {
   if (!deal) return '—'
+  if (deal.value == null || deal.value === '') return '—'
   return money(deal.value, deal.currency)
+}
+
+export function numericValue(deal) {
+  if (!deal || deal.value == null || deal.value === '') return 0
+  return Number(deal.value || 0)
+}
+
+export function valuePayload(amount) {
+  if (amount === '' || amount == null) return { value: null }
+  return { value: Number(amount) }
+}
+
+export function countryPayload(country, tbc) {
+  if (tbc) return { country: 'TBC', countryTbc: true }
+  return { country: country || '', countryTbc: false }
 }
 
 export function totalsByCurrency(deals) {
   if (!deals?.length) return '—'
   const map = {}
   for (const deal of deals) {
+    const amount = numericValue(deal)
+    if (!amount) continue
     const code = deal.currency || 'SGD'
-    map[code] = (map[code] || 0) + Number(deal.value || 0)
+    map[code] = (map[code] || 0) + amount
   }
   return Object.entries(map)
     .map(([currency, total]) => money(total, currency))

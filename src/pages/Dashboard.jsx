@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useData } from '../context/DataContext'
-import { activitySortValue, avgAgingDays, formatDate, isOpenDeal, isOverdue, money, opportunities } from '../utils'
+import { activitySortValue, avgAgingDays, formatDate, isOpenDeal, isOverdue, money, numericValue, opportunities } from '../utils'
 import { CURRENCIES, labelOf, DEAL_STAGES, TASK_STATUSES } from '../constants'
 import { Empty, NewButton, Pill } from '../components/ui'
 
@@ -49,7 +49,7 @@ export default function Dashboard() {
       openDeals,
       won,
       lost,
-      pipelineValue: openDeals.reduce((sum, d) => sum + Number(d.value || 0), 0),
+      pipelineValue: openDeals.reduce((sum, d) => sum + numericValue(d), 0),
       velocityDays: avgAgingDays(openDeals),
       upcoming: tasks
         .filter((t) => t.status !== 'done' && inView(t))
@@ -147,7 +147,7 @@ export default function Dashboard() {
         <div className="grid three">
           {DEAL_STAGES.map((stage) => {
             const rows = stageDeals.filter((d) => d.stage === stage.id)
-            const total = rows.reduce((sum, d) => sum + Number(d.value || 0), 0)
+            const total = rows.reduce((sum, d) => sum + numericValue(d), 0)
             return (
               <div key={stage.id}>
                 <div className="stat-label">{stage.label}</div>
