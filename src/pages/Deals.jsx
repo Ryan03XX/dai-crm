@@ -4,6 +4,8 @@ import { useData } from '../context/DataContext'
 import { DEAL_STAGES, LEAD_CATEGORIES, NAME_HINT, TRACKER_EMPTY, TRACKER_GROUPS, labelOf } from '../constants'
 import { CountryField, Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
+import { AttachmentPicker } from '../components/AttachmentPicker'
+import { deleteAttachmentFile, persistAttachments, revokeLocalUrl } from '../attachments'
 import { activitySortValue, agingLabel, countryPayload, currentSchedule, displayValue, formatDate, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 
@@ -40,14 +42,46 @@ function commitTracker(key, value) {
   return value
 }
 
+function formFromDeal(deal) {
+  return {
+    ...emptyDeal,
+    name: deal.name || '',
+    currency: deal.currency || '',
+    value: deal.value ?? '',
+    countryTbc: Boolean(deal.countryTbc),
+    companyId: deal.companyId || '',
+    contactId: deal.contactId || '',
+    stage: deal.stage || 'qualification',
+    expectedCloseDate: deal.expectedCloseDate || '',
+    nextStep: deal.nextStep || '',
+    probability: deal.probability ?? '20',
+    category: deal.category || 'dc-capacity',
+    country: deal.countryTbc ? '' : deal.country || 'SG',
+    schedule: deal.schedule || currentSchedule(),
+    ncp: deal.ncp || '',
+    endUser: deal.endUser || '',
+    gpuModel: deal.gpuModel || '',
+    gpuQty: deal.gpuQty ?? '',
+    oem: deal.oem || '',
+    deliverySchedule: deal.deliverySchedule || '',
+    dcVendor: deal.dcVendor || '',
+    dcSite: deal.dcSite || '',
+    capacityMw: deal.capacityMw ?? '',
+    comments: deal.comments || '',
+  }
+}
+
 export default function Deals() {
-  const { deals, companies, contacts, activities, create, update } = useData()
+  const { deals, companies, contacts, activities, create, update, remove } = useData()
   const [params, setParams] = useSearchParams()
   const selectedId = params.get('id')
   const stageFilter = params.get('filter')
   const selected = deals.find((d) => d.id === selectedId)
-  const [open, setOpen] = useState(false)
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState(emptyDeal)
+  const [files, setFiles] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const opps = useMemo(() => {
     const rows = opportunities(deals)
     if (stageFilter === 'won' || stageFilter === 'lost') {
@@ -64,12 +98,35 @@ export default function Deals() {
     [activities, selectedId]
   )
 
-  async function save(e) {
-    e.preventDefault()
+  const isAdd = modal === 'add'
+
+  function closeModal() {
+    files.filter((item) => item.local).forEach(revokeLocalUrl)
+    setModal(null)
+    setForm({ ...emptyDeal, schedule: currentSchedule() })
+    setFiles([])
+    setError('')
+  }
+
+  function openAdd() {
+    setError('')
+    setForm({ ...emptyDeal, schedule: currentSchedule() })
+    setFiles([])
+    setModal('add')
+  }
+
+  function openEdit(deal) {
+    setError('')
+    setForm(formFromDeal(deal))
+    setFiles(deal.attachments || [])
+    setModal(deal)
+  }
+
+  function dealFields() {
     const company = companies.find((c) => c.id === form.companyId)
     const contact = contacts.find((c) => c.id === form.contactId)
-    await create('deals', {
-      ...form,
+    return {
+      name: form.name,
       ...trackerFrom(form),
       gpuQty: commitTracker('gpuQty', form.gpuQty),
       capacityMw: commitTracker('capacityMw', form.capacityMw),
@@ -77,18 +134,53 @@ export default function Deals() {
       ...valuePayload(form.value),
       ...countryPayload(form.country, form.countryTbc),
       probability: Number(form.probability || 0),
+      companyId: form.companyId,
+      contactId: form.contactId,
       companyName: company?.name || '',
       contactName: contact?.name || '',
       endUser: form.endUser || company?.name || '',
+      stage: form.stage || 'qualification',
+      expectedCloseDate: form.expectedCloseDate || '',
+      nextStep: form.nextStep || '',
+      category: form.category,
       isOpportunity: true,
-    })
-    setOpen(false)
-    setForm({ ...emptyDeal, schedule: currentSchedule() })
+    }
+  }
+
+  async function save(e) {
+    e.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      const fields = dealFields()
+      if (isAdd) {
+        const id = await create('deals', { ...fields, attachments: [] })
+        const attachments = await persistAttachments(id, files, [])
+        if (attachments.length) await update('deals', id, { attachments })
+        setParams({ id })
+      } else {
+        const attachments = await persistAttachments(modal.id, files, modal.attachments || [])
+        await update('deals', modal.id, { ...fields, attachments })
+        setParams({ id: modal.id, ...(stageFilter ? { filter: stageFilter } : {}) })
+      }
+      closeModal()
+    } catch (err) {
+      setError(err.message || 'Unable to save this opportunity')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function saveSelected(payload) {
     if (!selected) return
     await update('deals', selected.id, payload)
+  }
+
+  async function deleteDeal(deal) {
+    if (!confirm(`Delete opportunity "${deal.name}"? This cannot be undone.`)) return
+    await Promise.all((deal.attachments || []).map((item) => deleteAttachmentFile(item)))
+    await remove('deals', deal.id)
+    if (selectedId === deal.id) setParams(stageFilter ? { filter: stageFilter } : {})
   }
 
   return (
@@ -98,7 +190,7 @@ export default function Deals() {
           <h1>Opportunities</h1>
           <p>Tracker view matching project, data center and project management fields</p>
         </div>
-        <NewButton onClick={() => setOpen(true)}>New opportunity</NewButton>
+        <NewButton onClick={openAdd}>New opportunity</NewButton>
       </div>
 
       {stageFilter && (
@@ -119,6 +211,7 @@ export default function Deals() {
                   {group.label}
                 </th>
               ))}
+              <th>Actions</th>
             </tr>
             <tr className="col-row">
               {TRACKER_GROUPS.flatMap((group) =>
@@ -126,6 +219,7 @@ export default function Deals() {
                   <th key={col.key}>{col.label}</th>
                 ))
               )}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -140,6 +234,16 @@ export default function Deals() {
                     <td key={col.key}>{trackerValue(deal, col.key)}</td>
                   ))
                 )}
+                <td>
+                  <div className="user-actions" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="btn light btn-small" onClick={() => openEdit(deal)}>
+                      Edit
+                    </button>
+                    <button type="button" className="btn light btn-small" onClick={() => deleteDeal(deal)}>
+                      Delete
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -210,6 +314,13 @@ export default function Deals() {
               values={selected}
               onCommit={(key, value) => saveSelected({ [key]: commitTracker(key, value) })}
             />
+            <AttachmentPicker
+              files={selected.attachments || []}
+              onChange={async (next) => {
+                const attachments = await persistAttachments(selected.id, next, selected.attachments || [])
+                await update('deals', selected.id, { attachments })
+              }}
+            />
             <div style={{ marginTop: 16 }}>
               <QuickActivity
                 onSubmit={(payload) =>
@@ -248,8 +359,8 @@ export default function Deals() {
         )}
       </div>
 
-      {open && (
-        <Modal title="New opportunity" onClose={() => setOpen(false)}>
+      {modal && (
+        <Modal title={isAdd ? 'New opportunity' : 'Edit opportunity'} onClose={closeModal}>
           <form onSubmit={save}>
             <div className="form-grid">
               <Field label="Project" className="full" hint={NAME_HINT}>
@@ -335,11 +446,15 @@ export default function Deals() {
                 />
               </Field>
             </div>
+            <AttachmentPicker files={files} onChange={setFiles} disabled={busy} />
+            {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
             <div className="modal-actions">
-              <button type="button" className="btn light" onClick={() => setOpen(false)}>
+              <button type="button" className="btn light" onClick={closeModal}>
                 Cancel
               </button>
-              <button className="btn">Save</button>
+              <button className="btn" disabled={busy}>
+                {busy ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </form>
         </Modal>

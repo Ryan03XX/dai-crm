@@ -264,7 +264,7 @@ tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: #faf6ec; }
 tr.clickable.selected { background: var(--accent-soft); }
 
-.tracker-table { min-width: 1280px; }
+.tracker-table { min-width: 1480px; }
 .tracker-table .group-row th {
   background: #15251c;
   color: #efe7d6;
@@ -730,6 +730,80 @@ tr.inactive-row td { color: var(--muted); }
   justify-content: center;
 }
 .linkish { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-weight: 700; }
+.danger-link { color: var(--danger) !important; }
+
+.attach-picker { margin-top: 16px; }
+.attach-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.attach-empty { padding: 4px 0 8px; }
+.attach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.attach-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+.attach-thumb,
+.attach-file {
+  width: 100%;
+  height: 88px;
+  border: 0;
+  background: #f4efe3;
+  cursor: pointer;
+  padding: 0;
+}
+.attach-thumb img {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  display: block;
+}
+.attach-file {
+  font-size: 12px;
+  padding: 10px;
+  text-align: left;
+  color: var(--ink);
+  word-break: break-word;
+}
+.attach-meta { padding: 8px 10px 10px; }
+.attach-meta > span {
+  display: block;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attach-card-actions { display: flex; gap: 10px; margin-top: 6px; }
+.attach-preview {
+  width: min(860px, 100%);
+  background: var(--paper);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.attach-preview img {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  background: #101c16;
+  display: block;
+}
+.attach-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+}
+.btn.disabled { opacity: 0.55; pointer-events: none; }
 
 .timeline { display: flex; flex-direction: column; gap: 10px; }
 .timeline-item {
