@@ -93,27 +93,33 @@ export default function CompanyDetail() {
         </div>
         <div className="card">
           <h3>Follow-up</h3>
-          <QuickActivity
-            onSubmit={(payload) =>
-              create('activities', {
-                ...payload,
-                relatedType: 'company',
-                relatedId: company.id,
-                relatedName: company.name,
-              })
-            }
-          />
-          <QuickTask
-            defaultTitle={`Follow up ${company.name}`}
-            onSubmit={(payload) =>
-              create('tasks', {
-                ...payload,
-                relatedType: 'company',
-                relatedId: company.id,
-                relatedName: company.name,
-              })
-            }
-          />
+          {editable ? (
+            <>
+              <QuickActivity
+                onSubmit={(payload) =>
+                  create('activities', {
+                    ...payload,
+                    relatedType: 'company',
+                    relatedId: company.id,
+                    relatedName: company.name,
+                  })
+                }
+              />
+              <QuickTask
+                defaultTitle={`Follow up ${company.name}`}
+                onSubmit={(payload) =>
+                  create('tasks', {
+                    ...payload,
+                    relatedType: 'company',
+                    relatedId: company.id,
+                    relatedName: company.name,
+                  })
+                }
+              />
+            </>
+          ) : (
+            <p className="muted">View only. You can read this company, but you cannot edit, log activity or add a task.</p>
+          )}
         </div>
       </div>
 

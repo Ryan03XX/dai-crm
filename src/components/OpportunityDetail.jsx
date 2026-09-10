@@ -108,29 +108,33 @@ export function OpportunityDetail({ deal }) {
           await update('deals', deal.id, { attachments })
         }}
       />
-      <div style={{ marginTop: 16 }}>
-        <QuickActivity
-          onSubmit={(payload) =>
-            create('activities', {
-              ...payload,
-              relatedType: 'deal',
-              relatedId: deal.id,
-              relatedName: deal.name,
-            })
-          }
-        />
-        <QuickTask
-          defaultTitle={`Follow up ${deal.name}`}
-          onSubmit={(payload) =>
-            create('tasks', {
-              ...payload,
-              relatedType: 'deal',
-              relatedId: deal.id,
-              relatedName: deal.name,
-            })
-          }
-        />
-      </div>
+      {editable ? (
+        <div style={{ marginTop: 16 }}>
+          <QuickActivity
+            onSubmit={(payload) =>
+              create('activities', {
+                ...payload,
+                relatedType: 'deal',
+                relatedId: deal.id,
+                relatedName: deal.name,
+              })
+            }
+          />
+          <QuickTask
+            defaultTitle={`Follow up ${deal.name}`}
+            onSubmit={(payload) =>
+              create('tasks', {
+                ...payload,
+                relatedType: 'deal',
+                relatedId: deal.id,
+                relatedName: deal.name,
+              })
+            }
+          />
+        </div>
+      ) : (
+        <p className="muted" style={{ marginTop: 16 }}>View only. You can read this opportunity, but you cannot edit, log activity or add a task.</p>
+      )}
       <div className="timeline">
         {related.map((item) => (
           <div className="timeline-item" key={item.id}>

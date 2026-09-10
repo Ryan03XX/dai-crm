@@ -37,21 +37,26 @@ export function AttachmentPicker({ files = [], onChange, disabled = false }) {
     <div className="attach-picker">
       <div className="attach-head">
         <span className="field-label">Attachments</span>
-        <label className={`btn light btn-small ${disabled ? 'disabled' : ''}`}>
-          Upload files
-          <input
-            type="file"
-            multiple
-            hidden
-            disabled={disabled}
-            onChange={(e) => {
-              addFiles(e.target.files)
-              e.target.value = ''
-            }}
-          />
-        </label>
+        {!disabled && (
+          <label className="btn light btn-small">
+            Upload files
+            <input
+              type="file"
+              multiple
+              hidden
+              onChange={(e) => {
+                addFiles(e.target.files)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        )}
       </div>
-      {files.length === 0 && <div className="muted attach-empty">No files yet. You can upload more than one.</div>}
+      {files.length === 0 && (
+        <div className="muted attach-empty">
+          {disabled ? 'No files yet.' : 'No files yet. You can upload more than one.'}
+        </div>
+      )}
       <div className="attach-grid">
         {files.map((item) => (
           <div className="attach-card" key={item.id}>

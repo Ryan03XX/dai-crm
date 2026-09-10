@@ -91,6 +91,7 @@ export default function LeadDetail() {
   }
 
   async function addActivity(payload) {
+    if (!editable) return
     await create('activities', {
       ...payload,
       relatedType: 'lead',
@@ -103,6 +104,7 @@ export default function LeadDetail() {
   }
 
   async function addTask(payload) {
+    if (!editable) return
     await create('tasks', {
       ...payload,
       relatedType: 'lead',
@@ -271,8 +273,14 @@ export default function LeadDetail() {
 
         <div className="card">
           <h3>Follow-up activities / tasks</h3>
-          <QuickActivity onSubmit={addActivity} />
-          <QuickTask onSubmit={addTask} defaultTitle={`Follow up ${lead.name} tomorrow`} />
+          {editable ? (
+            <>
+              <QuickActivity onSubmit={addActivity} />
+              <QuickTask onSubmit={addTask} defaultTitle={`Follow up ${lead.name} tomorrow`} />
+            </>
+          ) : (
+            <p className="muted">View only. You can read this lead, but you cannot edit, log activity or add a task.</p>
+          )}
           <div className="timeline" style={{ marginTop: 16 }}>
             {relatedActivities.map((item) => (
               <div className="timeline-item" key={item.id}>
