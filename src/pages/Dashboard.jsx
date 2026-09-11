@@ -91,11 +91,11 @@ export default function Dashboard() {
 
       <div className="grid stats">
         <Stat label="Leads" value={currencyLeads.length} to="/leads" />
-        <Stat label="Open opportunities" value={openDeals.length} to="/pipeline" />
+        <Stat label="Open opportunities" value={openDeals.length} to="/deals?filter=open" />
         <Stat label="Pipeline value" value={money(pipelineValue, currency)} to="/pipeline" />
         <Stat label="Velocity" value={`${velocityDays}d`} to="/pipeline" />
-        <Stat label="Won" value={won.length} to="/deals?filter=won" />
-        <Stat label="Lost" value={lost.length} to="/deals?filter=lost" />
+        <Stat label="Won" value={won.length} to="/pipeline?stage=won" />
+        <Stat label="Lost" value={lost.length} to="/pipeline?stage=lost" />
       </div>
 
       <div className="grid two" style={{ marginTop: 16 }}>

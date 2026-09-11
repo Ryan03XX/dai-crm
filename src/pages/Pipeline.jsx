@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, LEAD_CATEGORIES, labelOf } from '../constants'
@@ -9,8 +10,11 @@ import { OpportunityModal } from '../components/OpportunityDetail'
 export default function Pipeline() {
   const { deals, update } = useData()
   const { canEdit } = useAuth()
+  const [params] = useSearchParams()
+  const focusStage = params.get('stage')
   const [selectedId, setSelectedId] = useState(null)
   const dragging = useRef(false)
+  const colRefs = useRef({})
   const opps = useMemo(() => opportunities(deals), [deals])
   const openOpps = useMemo(() => opps.filter(isOpenDeal), [opps])
   const size = openOpps.length
@@ -27,6 +31,13 @@ export default function Pipeline() {
   }
 
   const shapeTotal = openOpps.length || 1
+
+  useEffect(() => {
+    if (!focusStage) return
+    const col = colRefs.current[focusStage]
+    if (!col) return
+    col.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [focusStage, opps.length])
 
   return (
     <div>
@@ -85,7 +96,10 @@ export default function Pipeline() {
           return (
             <section
               key={stage.id}
-              className="kanban-col"
+              ref={(node) => {
+                colRefs.current[stage.id] = node
+              }}
+              className={`kanban-col ${focusStage === stage.id ? 'focus-col' : ''}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => onDrop(stage.id, e)}
             >

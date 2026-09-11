@@ -8,7 +8,7 @@ import { TrackerFields } from '../components/TrackerFields'
 import { AttachmentPicker } from '../components/AttachmentPicker'
 import { OpportunityModal } from '../components/OpportunityDetail'
 import { deleteAttachmentFile, persistAttachments, revokeLocalUrl } from '../attachments'
-import { agingLabel, countryPayload, currentSchedule, displayValue, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
+import { agingLabel, countryPayload, currentSchedule, displayValue, isOpenDeal, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
 
 const emptyDeal = {
   name: '',
@@ -86,6 +86,9 @@ export default function Deals() {
   const [error, setError] = useState('')
   const opps = useMemo(() => {
     const rows = opportunities(deals)
+    if (stageFilter === 'open') {
+      return rows.filter(isOpenDeal)
+    }
     if (stageFilter === 'won' || stageFilter === 'lost') {
       return rows.filter((deal) => deal.stage === stageFilter)
     }
