@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth'
@@ -113,6 +114,9 @@ export function AuthProvider({ children }) {
       },
       async signOut() {
         await firebaseSignOut(auth)
+      },
+      async sendPasswordReset(email) {
+        await sendPasswordResetEmail(auth, email.trim())
       },
       async createUser({ name, email, password, role = 'sales' }) {
         const secondary = secondaryServices()

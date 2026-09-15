@@ -7,11 +7,13 @@ import { DaiLogo } from '../components/ui'
 const REMEMBER_EMAIL_KEY = 'dai-crm-remember-email'
 
 export default function Login() {
-  const { user, signIn } = useAuth()
+  const { user, signIn, sendPasswordReset } = useAuth()
   const [email, setEmail] = useState(() => localStorage.getItem(REMEMBER_EMAIL_KEY) || '')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
+  const [mode, setMode] = useState('signin')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
   if (!isFirebaseConfigured) return <SetupGuide />
@@ -20,6 +22,7 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    setNotice('')
     setBusy(true)
     try {
       if (remember) localStorage.setItem(REMEMBER_EMAIL_KEY, email)
@@ -38,6 +41,44 @@ export default function Login() {
     }
   }
 
+  async function handleReset(e) {
+    e.preventDefault()
+    setError('')
+    setNotice('')
+    setBusy(true)
+    try {
+      await sendPasswordReset(email)
+      setNotice(`A reset link has been sent to ${email}. Check your inbox, including junk.`)
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') {
+        setNotice(`A reset link has been sent to ${email}. Check your inbox, including junk.`)
+      } else {
+        const messages = {
+          'auth/invalid-email': 'Please enter a valid email',
+          'auth/too-many-requests': 'Too many attempts. Please wait and try again.',
+          'auth/missing-email': 'Please enter your email',
+        }
+        setError(messages[err.code] || err.message || 'Unable to send reset link')
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function openReset() {
+    setError('')
+    setNotice('')
+    setMode('reset')
+  }
+
+  function backToSignIn() {
+    setError('')
+    setNotice('')
+    setMode('signin')
+  }
+
+  const resetting = mode === 'reset'
+
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -46,31 +87,46 @@ export default function Login() {
           <p>Track leads, opportunities and pipeline in one workspace.</p>
         </aside>
         <div className="auth-card">
-          <h1>Welcome back</h1>
-          <p>Sign in to continue</p>
-          <form onSubmit={handleSubmit}>
+          <h1>{resetting ? 'Forgot password' : 'Welcome back'}</h1>
+          <p>{resetting ? 'We will email you a reset link' : 'Sign in to continue'}</p>
+          <form onSubmit={resetting ? handleReset : handleSubmit}>
             <label className="field">
               <span>Email</span>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             </label>
-            <label className="field">
-              <span>Password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </label>
-            <label className="remember-me">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-              Remember me
-            </label>
+            {!resetting && (
+              <>
+                <label className="field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+                </label>
+                <div className="auth-row">
+                  <label className="remember-me">
+                    <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                    Remember me
+                  </label>
+                  <button type="button" className="linkish" onClick={openReset}>
+                    Forgot password?
+                  </button>
+                </div>
+              </>
+            )}
             {error && <div className="error">{error}</div>}
+            {notice && <div className="notice">{notice}</div>}
             <button className="btn auth-submit" disabled={busy}>
-              {busy ? 'Please wait...' : 'Sign in'}
+              {busy ? 'Please wait...' : resetting ? (notice ? 'Resend link' : 'Send reset link') : 'Sign in'}
             </button>
+            {resetting && (
+              <button type="button" className="linkish auth-back" onClick={backToSignIn}>
+                Back to sign in
+              </button>
+            )}
           </form>
         </div>
       </div>

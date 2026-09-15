@@ -824,6 +824,21 @@ tr.inactive-row td { color: var(--muted); }
 .auth-card > p { color: var(--muted); margin: 0 0 24px; }
 .auth-card form { display: flex; flex-direction: column; gap: 14px; }
 .auth-submit { width: 100%; justify-content: center; margin-top: 6px; padding: 12px 14px; }
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.auth-back {
+  align-self: center;
+  background: none;
+  border: 0;
+}
+.notice {
+  color: var(--accent);
+  font-size: 14px;
+}
 .remember-me {
   display: flex;
   align-items: center;
