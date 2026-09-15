@@ -69,7 +69,7 @@ export default function Layout() {
         </nav>
         <div className="sidebar-foot">
           <div>{profile?.name}</div>
-          <small>{isAdmin ? 'Admin · can see and edit everyone' : 'Sales · view all, edit own only'}</small>
+          <small>{isAdmin ? 'Admin · can see and edit everyone' : 'Sales · view all, edit if Created by or PIC'}</small>
         </div>
       </aside>
 

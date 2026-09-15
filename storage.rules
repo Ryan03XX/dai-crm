@@ -10,17 +10,17 @@ service firebase.storage {
         firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    function ownsDeal(dealId) {
-      return signedIn() &&
-        firestore.get(/databases/(default)/documents/deals/$(dealId)).data.ownerId == request.auth.uid;
+    function canEditDeal(dealId) {
+      let deal = firestore.get(/databases/(default)/documents/deals/$(dealId)).data;
+      return signedIn() && (deal.ownerId == request.auth.uid || deal.picId == request.auth.uid);
     }
 
     match /opportunities/{dealId}/{fileName} {
       allow read: if signedIn();
       allow create, update: if signedIn()
         && request.resource.size < 10 * 1024 * 1024
-        && (isAdmin() || ownsDeal(dealId));
-      allow delete: if isAdmin() || ownsDeal(dealId);
+        && (isAdmin() || canEditDeal(dealId));
+      allow delete: if isAdmin() || canEditDeal(dealId);
     }
 
     match /{allPaths=**} {

@@ -2,9 +2,9 @@ import { useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES } from '../constants'
-import { activitySortValue, agingLabel, countryPayload, formatDate, moneyOf, valuePayload } from '../utils'
+import { activitySortValue, agingLabel, countryPayload, formatDate, moneyOf, picOf, valuePayload } from '../utils'
 import { persistAttachments } from '../attachments'
-import { CountryField, Field, Modal, MoneyField } from './ui'
+import { CountryField, Field, Modal, MoneyField, PicSelect } from './ui'
 import { TrackerFields } from './TrackerFields'
 import { AttachmentPicker } from './AttachmentPicker'
 import { QuickActivity, QuickTask } from './FollowUp'
@@ -17,9 +17,10 @@ function commitTracker(key, value) {
 }
 
 export function OpportunityDetail({ deal }) {
-  const { activities, create, update } = useData()
+  const { activities, users, create, update } = useData()
   const { canEdit } = useAuth()
   const editable = canEdit(deal)
+  const pic = picOf(deal)
   const related = useMemo(
     () =>
       activities
@@ -42,6 +43,13 @@ export function OpportunityDetail({ deal }) {
       </p>
       <fieldset className="edit-scope" disabled={!editable}>
         <div className="form-grid">
+          <Field label="O-No">
+            <input
+              defaultValue={deal.oNumber || ''}
+              key={`${deal.id}-onumber`}
+              onBlur={(e) => save({ oNumber: e.target.value })}
+            />
+          </Field>
           <Field label="Stage">
             <select
               value={deal.stage}
@@ -91,6 +99,15 @@ export function OpportunityDetail({ deal }) {
             required={!deal.countryTbc}
             onCurrencyChange={(currency) => save({ currency })}
             onAmountChange={(value) => save(valuePayload(value))}
+          />
+          <Field label="Created by">
+            <input value={deal.ownerName || ''} disabled />
+          </Field>
+          <PicSelect
+            value={pic.picId}
+            users={users}
+            disabled={!editable}
+            onChange={(payload) => save(payload)}
           />
         </div>
         <TrackerFields

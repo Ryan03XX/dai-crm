@@ -80,6 +80,7 @@ export const TRACKER_GROUPS = [
     label: 'Project Information',
     columns: [
       { key: 'name', label: 'Project' },
+      { key: 'oNumber', label: 'O-No' },
       { key: 'ncp', label: 'NCP' },
       { key: 'endUser', label: 'End User' },
       { key: 'gpuModel', label: 'GPU Model' },
@@ -104,8 +105,9 @@ export const TRACKER_GROUPS = [
       { key: 'comments', label: 'Comments' },
       { key: 'stage', label: 'Stage' },
       { key: 'value', label: 'Value' },
-      { key: 'ownerName', label: 'Owner' },
+      { key: 'picName', label: 'PIC' },
       { key: 'aging', label: 'Aging' },
+      { key: 'ownerName', label: 'Created by' },
     ],
   },
 ]

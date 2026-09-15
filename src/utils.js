@@ -184,3 +184,28 @@ export function displayValue(value) {
   if (value === '' || value == null) return '—'
   return value
 }
+
+export function picOf(record = {}) {
+  return {
+    picId: record.picId || record.ownerId || '',
+    picName: record.picName || record.ownerName || '',
+  }
+}
+
+export function canEditRecord(record, uid, isAdmin) {
+  if (!record || !uid) return false
+  if (isAdmin) return true
+  return record.ownerId === uid || record.picId === uid
+}
+
+export function userPickerOptions(users = [], selectedId = '') {
+  return users
+    .filter((person) => person.status !== 'inactive' || person.id === selectedId)
+    .slice()
+    .sort((a, b) => String(a.name || a.email || '').localeCompare(String(b.name || b.email || '')))
+    .map((person) => ({
+      id: person.id,
+      label: person.name || person.email || 'User',
+      hint: person.email || '',
+    }))
+}

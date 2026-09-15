@@ -3,15 +3,16 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useData } from '../context/DataContext'
 import { DEAL_STAGES, LEAD_CATEGORIES, NAME_HINT, TRACKER_EMPTY, TRACKER_GROUPS, labelOf } from '../constants'
-import { CountryField, Field, Modal, MoneyField, NewButton, Pill } from '../components/ui'
+import { CountryField, Field, Modal, MoneyField, NewButton, PicSelect, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
 import { AttachmentPicker } from '../components/AttachmentPicker'
 import { OpportunityModal } from '../components/OpportunityDetail'
 import { deleteAttachmentFile, persistAttachments, revokeLocalUrl } from '../attachments'
-import { agingLabel, countryPayload, currentSchedule, displayValue, isOpenDeal, moneyOf, opportunities, trackerFrom, valuePayload } from '../utils'
+import { agingLabel, countryPayload, currentSchedule, displayValue, isOpenDeal, moneyOf, opportunities, picOf, trackerFrom, valuePayload } from '../utils'
 
 const emptyDeal = {
   name: '',
+  oNumber: '',
   currency: '',
   value: '',
   countryTbc: false,
@@ -24,6 +25,8 @@ const emptyDeal = {
   category: 'dc-capacity',
   country: 'SG',
   schedule: currentSchedule(),
+  picId: '',
+  picName: '',
   ...TRACKER_EMPTY,
 }
 
@@ -32,6 +35,7 @@ function trackerValue(deal, key) {
   if (key === 'country') return deal.countryTbc ? 'TBC' : displayValue(deal.country)
   if (key === 'stage') return <Pill value={deal.stage} label={labelOf(DEAL_STAGES, deal.stage)} />
   if (key === 'value') return moneyOf(deal)
+  if (key === 'picName') return displayValue(picOf(deal).picName)
   if (key === 'aging') return agingLabel(deal.createdAt)
   return displayValue(deal[key])
 }
@@ -47,6 +51,7 @@ function formFromDeal(deal) {
   return {
     ...emptyDeal,
     name: deal.name || '',
+    oNumber: deal.oNumber || '',
     currency: deal.currency || '',
     value: deal.value ?? '',
     countryTbc: Boolean(deal.countryTbc),
@@ -69,12 +74,14 @@ function formFromDeal(deal) {
     dcSite: deal.dcSite || '',
     capacityMw: deal.capacityMw ?? '',
     comments: deal.comments || '',
+    picId: deal.picId || deal.ownerId || '',
+    picName: deal.picName || deal.ownerName || '',
   }
 }
 
 export default function Deals() {
-  const { deals, companies, contacts, create, update, remove } = useData()
-  const { canEdit } = useAuth()
+  const { deals, companies, contacts, users, create, update, remove } = useData()
+  const { user, profile, canEdit } = useAuth()
   const [params, setParams] = useSearchParams()
   const selectedId = params.get('id')
   const stageFilter = params.get('filter')
@@ -107,7 +114,12 @@ export default function Deals() {
 
   function openAdd() {
     setError('')
-    setForm({ ...emptyDeal, schedule: currentSchedule() })
+    setForm({
+      ...emptyDeal,
+      schedule: currentSchedule(),
+      picId: user?.uid || '',
+      picName: profile?.name || user?.displayName || user?.email || '',
+    })
     setFiles([])
     setModal('add')
   }
@@ -125,6 +137,7 @@ export default function Deals() {
     const contact = contacts.find((c) => c.id === form.contactId)
     return {
       name: form.name,
+      oNumber: form.oNumber || '',
       ...trackerFrom(form),
       gpuQty: commitTracker('gpuQty', form.gpuQty),
       capacityMw: commitTracker('capacityMw', form.capacityMw),
@@ -142,6 +155,8 @@ export default function Deals() {
       nextStep: form.nextStep || '',
       category: form.category,
       isOpportunity: true,
+      picId: form.picId || '',
+      picName: form.picName || '',
     }
   }
 
@@ -157,7 +172,7 @@ export default function Deals() {
         if (attachments.length) await update('deals', id, { attachments })
         setParams({ id })
       } else {
-        if (!canEdit(modal)) throw new Error('You can only edit your own records')
+        if (!canEdit(modal)) throw new Error('You can only edit records you created or are PIC of')
         const attachments = await persistAttachments(modal.id, files, modal.attachments || [])
         await update('deals', modal.id, { ...fields, attachments })
         setParams({ id: modal.id, ...(stageFilter ? { filter: stageFilter } : {}) })
@@ -183,7 +198,7 @@ export default function Deals() {
       <div className="page-head">
         <div>
           <h1>Opportunities</h1>
-          <p>All opportunities are visible. Sales can edit and attach files on their own records only.</p>
+          <p>All opportunities are visible. Sales can edit records they created or are PIC of.</p>
         </div>
         <NewButton onClick={openAdd}>New opportunity</NewButton>
       </div>
@@ -226,7 +241,21 @@ export default function Deals() {
               >
                 {TRACKER_GROUPS.flatMap((group) =>
                   group.columns.map((col) => (
-                    <td key={col.key}>{trackerValue(deal, col.key)}</td>
+                    <td
+                      key={col.key}
+                      onClick={col.key === 'picName' ? (e) => e.stopPropagation() : undefined}
+                    >
+                      {col.key === 'picName' && canEdit(deal) ? (
+                        <PicSelect
+                          compact
+                          value={picOf(deal).picId}
+                          users={users}
+                          onChange={(payload) => update('deals', deal.id, payload)}
+                        />
+                      ) : (
+                        trackerValue(deal, col.key)
+                      )}
+                    </td>
                   ))
                 )}
                 <td>
@@ -266,6 +295,13 @@ export default function Deals() {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                   title={NAME_HINT}
+                />
+              </Field>
+              <Field label="O-No" className="full">
+                <input
+                  value={form.oNumber}
+                  onChange={(e) => setForm({ ...form, oNumber: e.target.value })}
+                  placeholder="e.g. O-12345"
                 />
               </Field>
               <Field label="Customer company">
@@ -322,6 +358,11 @@ export default function Deals() {
                 required={!form.countryTbc}
                 onCurrencyChange={(currency) => setForm({ ...form, currency })}
                 onAmountChange={(value) => setForm({ ...form, value })}
+              />
+              <PicSelect
+                value={form.picId}
+                users={users}
+                onChange={(payload) => setForm({ ...form, ...payload })}
               />
             </div>
             <TrackerFields values={form} onChange={(key, value) => setForm({ ...form, [key]: value })} />

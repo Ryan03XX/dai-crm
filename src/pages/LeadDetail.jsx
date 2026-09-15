@@ -11,7 +11,7 @@ import {
   NAME_HINT,
   labelOf,
 } from '../constants'
-import { CountryField, Field, Modal, MoneyField, PhoneField, Pill } from '../components/ui'
+import { CountryField, Field, Modal, MoneyField, PhoneField, PicSelect, Pill } from '../components/ui'
 import { TrackerFields } from '../components/TrackerFields'
 import { QuickActivity, QuickTask } from '../components/FollowUp'
 import { activitySortValue, agingLabel, currentSchedule, formatDate, formatDateTime, suggestedLeadName } from '../utils'
@@ -19,8 +19,8 @@ import { activitySortValue, agingLabel, currentSchedule, formatDate, formatDateT
 export default function LeadDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { leads, activities, tasks, update, create, convertLead } = useData()
-  const { canEdit } = useAuth()
+  const { leads, activities, tasks, users, update, create, convertLead } = useData()
+  const { user, profile, canEdit } = useAuth()
   const lead = leads.find((item) => item.id === id)
   const [convertOpen, setConvertOpen] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
@@ -29,6 +29,8 @@ export default function LeadDetail() {
   const [dealAmount, setDealAmount] = useState('')
   const [dealCountry, setDealCountry] = useState('SG')
   const [countryTbc, setCountryTbc] = useState(false)
+  const [picId, setPicId] = useState('')
+  const [picName, setPicName] = useState('')
   const [form, setForm] = useState({
     name: '',
     company: '',
@@ -127,6 +129,8 @@ export default function LeadDetail() {
       data.value = dealAmount
       data.country = dealCountry
       data.countryTbc = countryTbc
+      data.picId = picId
+      data.picName = picName
       await update('leads', lead.id, form)
       await convertLead({ ...lead, ...form }, data)
       setDealCurrency('')
@@ -165,6 +169,8 @@ export default function LeadDetail() {
               setDealAmount('')
               setDealCountry(lead.country || lead.phoneCountry || 'SG')
               setCountryTbc(false)
+              setPicId(user?.uid || lead.ownerId || '')
+              setPicName(profile?.name || lead.ownerName || '')
               setConfirmed(false)
               setConvertOpen(true)
             }}>
@@ -320,6 +326,9 @@ export default function LeadDetail() {
               <Field label="Project / opportunity name">
                 <input name="dealName" defaultValue={lead.name || `${lead.company || lead.name} opportunity`} required />
               </Field>
+              <Field label="O-No">
+                <input name="oNumber" placeholder="e.g. O-12345" />
+              </Field>
               <CountryField
                 country={dealCountry}
                 tbc={countryTbc}
@@ -345,6 +354,14 @@ export default function LeadDetail() {
               <Field label="Probability %">
                 <input name="probability" type="number" min="0" max="100" defaultValue="20" />
               </Field>
+              <PicSelect
+                value={picId}
+                users={users}
+                onChange={(payload) => {
+                  setPicId(payload.picId)
+                  setPicName(payload.picName)
+                }}
+              />
             </div>
             <TrackerFields
               named

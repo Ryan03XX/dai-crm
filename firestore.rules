@@ -14,10 +14,14 @@ service cloud.firestore {
       return signedIn() && data.ownerId == request.auth.uid;
     }
 
+    function isPic(data) {
+      return signedIn() && data.picId == request.auth.uid;
+    }
+
     function crmWrite() {
       return request.method == 'create'
         ? owned(request.resource.data)
-        : (isAdmin() || owned(resource.data));
+        : (isAdmin() || owned(resource.data) || isPic(resource.data));
     }
 
     match /users/{userId} {

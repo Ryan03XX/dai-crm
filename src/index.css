@@ -277,7 +277,7 @@ tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: #faf6ec; }
 tr.clickable.selected { background: var(--accent-soft); }
 
-.tracker-table { min-width: 1480px; }
+.tracker-table { min-width: 1680px; }
 .tracker-table .group-row th {
   background: #15251c;
   color: #efe7d6;
@@ -580,6 +580,88 @@ tr.inactive-row td { color: var(--muted); }
   background: var(--accent-soft);
 }
 .phone-name { flex: 1; font-weight: 600; }
+
+.search-select { position: relative; min-width: 0; }
+.search-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.search-select.compact .search-select-trigger {
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-width: 140px;
+  font-size: 13px;
+}
+.search-select-trigger:disabled {
+  background: #f4efe3;
+  color: var(--muted);
+  cursor: default;
+}
+.search-select-trigger .placeholder { color: var(--muted); }
+.search-select-caret {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+.search-select-caret.up {
+  border-top: 0;
+  border-bottom: 6px solid currentColor;
+}
+.search-select-menu {
+  position: fixed;
+  z-index: 40;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+}
+.search-select-search {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+.search-select-list {
+  max-height: 240px;
+  overflow: auto;
+}
+.search-select-list button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.search-select-list button small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.search-select-list button:hover,
+.search-select-list button.active {
+  background: var(--accent-soft);
+}
 .stat-value.multi {
   font-size: 18px;
   line-height: 1.4;

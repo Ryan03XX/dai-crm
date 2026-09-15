@@ -11,7 +11,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
-import { todayInputDate } from '../utils'
+import { canEditRecord, todayInputDate } from '../utils'
 import { useAuth } from './AuthContext'
 
 const COLLECTIONS = ['leads', 'companies', 'contacts', 'deals', 'activities', 'tasks', 'users']
@@ -76,6 +76,10 @@ export function DataProvider({ children }) {
         if (colName === 'deals') {
           extra.isOpportunity = payload.isOpportunity !== false
           if (!payload.stageEnteredAt) extra.stageEnteredAt = serverTimestamp()
+          if (!payload.picId) {
+            extra.picId = ownerId
+            extra.picName = ownerName
+          }
         }
         const ref = await addDoc(collection(db, colName), {
           ...payload,
@@ -88,15 +92,15 @@ export function DataProvider({ children }) {
       },
       async update(colName, id, payload) {
         const row = data[colName]?.find((item) => item.id === id)
-        if (row && !isAdmin && row.ownerId !== ownerId) {
-          throw new Error('You can only edit your own records')
+        if (row && !canEditRecord(row, ownerId, isAdmin)) {
+          throw new Error('You can only edit records you created or are PIC of')
         }
         await updateDoc(doc(db, colName, id), payload)
       },
       async remove(colName, id) {
         const row = data[colName]?.find((item) => item.id === id)
-        if (row && !isAdmin && row.ownerId !== ownerId) {
-          throw new Error('You can only delete your own records')
+        if (row && !canEditRecord(row, ownerId, isAdmin)) {
+          throw new Error('You can only delete records you created or are PIC of')
         }
         await deleteDoc(doc(db, colName, id))
       },
@@ -136,6 +140,7 @@ export function DataProvider({ children }) {
         })
         batch.set(dealRef, {
           name: form.dealName,
+          oNumber: form.oNumber || '',
           value: form.value === '' || form.value == null ? null : Number(form.value),
           currency: form.currency || '',
           currency: form.currency,
@@ -164,6 +169,8 @@ export function DataProvider({ children }) {
           isOpportunity: true,
           leadId: lead.id,
           stageEnteredAt: stamp,
+          picId: form.picId || ownerId,
+          picName: form.picName || ownerName,
           ...owner,
           createdAt: stamp,
         })

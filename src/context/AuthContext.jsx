@@ -23,6 +23,7 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import { auth, db, firebaseConfig, isFirebaseConfigured } from '../firebase'
+import { canEditRecord } from '../utils'
 
 const AuthContext = createContext(null)
 
@@ -84,8 +85,7 @@ export function AuthProvider({ children }) {
       isActive: profile?.status !== 'inactive',
       canEdit(record) {
         if (!record || profile?.status === 'inactive') return false
-        if (profile?.role === 'admin') return true
-        return record.ownerId === user?.uid
+        return canEditRecord(record, user?.uid, profile?.role === 'admin')
       },
       async signIn(email, password, remember = true) {
         await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
