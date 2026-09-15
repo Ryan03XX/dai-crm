@@ -41,16 +41,20 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(isFirebaseConfigured)
+  const [blockedReason, setBlockedReason] = useState('')
 
   useEffect(() => {
     if (!isFirebaseConfigured) return undefined
 
     const unsubAuth = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser)
       if (!nextUser) {
+        setUser(null)
         setProfile(null)
         setLoading(false)
+        return
       }
+      setLoading(true)
+      setUser(nextUser)
     })
 
     return unsubAuth
@@ -60,14 +64,20 @@ export function AuthProvider({ children }) {
     if (!user) return undefined
 
     const unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
-      if (snap.exists()) {
-        const nextProfile = { id: snap.id, ...snap.data() }
-        setProfile(nextProfile)
+      if (!snap.exists()) {
         setLoading(false)
-        if (nextProfile.status === 'inactive') {
-          firebaseSignOut(auth)
-        }
+        return
       }
+      const nextProfile = { id: snap.id, ...snap.data() }
+      if (nextProfile.status === 'inactive') {
+        setBlockedReason('This account is inactive. Contact an admin.')
+        setLoading(false)
+        firebaseSignOut(auth)
+        return
+      }
+      setBlockedReason('')
+      setProfile(nextProfile)
+      setLoading(false)
     })
 
     const timeout = setTimeout(() => setLoading(false), 4000)
@@ -82,6 +92,7 @@ export function AuthProvider({ children }) {
       user,
       profile,
       loading,
+      blockedReason,
       isAdmin: profile?.role === 'admin' && profile?.status !== 'inactive',
       isActive: profile?.status !== 'inactive',
       canEdit(record) {
@@ -89,13 +100,21 @@ export function AuthProvider({ children }) {
         return canEditRecord(record, user?.uid, profile?.role === 'admin')
       },
       async signIn(email, password, remember = true) {
-        await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
-        const cred = await signInWithEmailAndPassword(auth, email, password)
-        const snap = await getDoc(doc(db, 'users', cred.user.uid))
-        if (snap.data()?.status === 'inactive') {
-          await firebaseSignOut(auth)
-          const err = new Error('This account is inactive. Contact an admin.')
-          err.code = 'auth/user-inactive'
+        setBlockedReason('')
+        setLoading(true)
+        try {
+          await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
+          const cred = await signInWithEmailAndPassword(auth, email, password)
+          const snap = await getDoc(doc(db, 'users', cred.user.uid))
+          if (snap.data()?.status === 'inactive') {
+            setBlockedReason('This account is inactive. Contact an admin.')
+            await firebaseSignOut(auth)
+            const err = new Error('This account is inactive. Contact an admin.')
+            err.code = 'auth/user-inactive'
+            throw err
+          }
+        } catch (err) {
+          if (err.code !== 'auth/user-inactive') setLoading(false)
           throw err
         }
       },
@@ -137,7 +156,7 @@ export function AuthProvider({ children }) {
         }
       },
     }),
-    [user, profile, loading]
+    [user, profile, loading, blockedReason]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

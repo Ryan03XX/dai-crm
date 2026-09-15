@@ -7,7 +7,7 @@ import { DaiLogo } from '../components/ui'
 const REMEMBER_EMAIL_KEY = 'dai-crm-remember-email'
 
 export default function Login() {
-  const { user, signIn, sendPasswordReset } = useAuth()
+  const { user, loading, blockedReason, signIn, sendPasswordReset } = useAuth()
   const [email, setEmail] = useState(() => localStorage.getItem(REMEMBER_EMAIL_KEY) || '')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -17,7 +17,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
 
   if (!isFirebaseConfigured) return <SetupGuide />
-  if (user) return <Navigate to="/" replace />
+  if (user && !loading) return <Navigate to="/" replace />
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -118,6 +118,7 @@ export default function Login() {
               </>
             )}
             {error && <div className="error">{error}</div>}
+            {!error && blockedReason && <div className="error">{blockedReason}</div>}
             {notice && <div className="notice">{notice}</div>}
             <button className="btn auth-submit" disabled={busy}>
               {busy ? 'Please wait...' : resetting ? (notice ? 'Resend link' : 'Send reset link') : 'Sign in'}
